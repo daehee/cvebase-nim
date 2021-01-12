@@ -1,6 +1,21 @@
 import parsecfg except Config
 import strutils
-import types
+
+type
+  Config* = ref object
+    address*: string
+    port*: int
+    useHttps*: bool
+    title*: string
+    hostname*: string
+    staticDir*: string
+    dbConn*: string
+
+    # redisHost*: string
+    # redisPort*: int
+    # redisConns*: int
+    # redisMaxConns*: int
+
 
 proc get*[T](config: parseCfg.Config; s, v: string; default: T): T =
   let val = config.getSectionValue(s, v)
@@ -9,7 +24,6 @@ proc get*[T](config: parseCfg.Config; s, v: string; default: T): T =
   when T is int: parseInt(val)
   elif T is bool: parseBool(val)
   elif T is string: val
-
 
 
 proc getConfig*(path: string): (Config, parseCfg.Config) =
@@ -22,6 +36,7 @@ proc getConfig*(path: string): (Config, parseCfg.Config) =
     title: cfg.get("Server", "title", "cvebase"),
     hostname: cfg.get("Server", "hostname", "cvebase.com"),
     staticDir: cfg.get("Server", "staticDir", "./public"),
+    dbConn: cfg.get("Server", "dbConn", "")
 
     # redisHost: cfg.get("Cache", "redisHost", "localhost"),
     # redisPort: cfg.get("Cache", "redisPort", 6379),

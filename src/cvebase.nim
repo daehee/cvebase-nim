@@ -12,8 +12,10 @@ import db
 const configPath {.strdefine.} = "./cvebase.conf"
 let (cfg, fullCfg) = getConfig(configPath)
 
-dbClient = waitFor initDbClient("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
+# Initialize postgres DB
+dbClient = waitFor initDbClient(cfg.dbConn)
 
+# Set jester settings
 settings:
   port = Port(cfg.port)
   staticDir = cfg.staticDir
