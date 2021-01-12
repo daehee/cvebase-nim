@@ -46,15 +46,14 @@ routes:
     resp h1("Hello world")
 
   error Http404:
-    resp Http404, "Looks you took a wrong turn somewhere."
+    # FIXME replace with debug logging
+    echo "error 404: " & request.ip & " -> " & request.path
+    resp Http404, "Looks like you took a wrong turn somewhere."
 
   error Exception:
     # FIXME replace with debug logging
-    echo "error: " & exception.msg
+    echo "error 500: " & request.ip & " -> " & request.path & " : " & exception.msg
     resp Http500, "Something bad happened."
-
-#  error Http404:
-#    resp Http404, or("Page not found", cfg)
 
   # Extend routes with custom routers
   extend cve, "/cve"
