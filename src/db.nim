@@ -9,6 +9,9 @@ type
     conn: apgPool
     connStr: string
 
+var
+  dbClient* {.threadvar.}: DbClient
+
 proc initDbClient*(connStr: string): Future[DBClient] {.async.} =
   let pool = newPool()
   await pool.connect(connStr)

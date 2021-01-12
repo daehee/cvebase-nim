@@ -9,9 +9,6 @@ import config
 import routes/[cve]
 import db
 
-var
-  dbClient {.threadvar.}: DbClient
-
 const configPath {.strdefine.} = "./cvebase.conf"
 let (cfg, fullCfg) = getConfig(configPath)
 
