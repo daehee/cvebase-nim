@@ -14,6 +14,9 @@ proc initDbClient*(connStr: string): Future[DBClient] {.async.} =
   await pool.connect(connStr)
   return DBClient(conn: pool, connStr: connStr)
 
+#proc setDbClient*(connStr: string) =
+#  dbClient = waitFor initDbClient(connStr)
+
 proc checkHealth*(cl: DbClient): Future[string] {.async.} =
   let tmpConn = await connect(cl.connStr)
   let ver = tmpConn.getServerVersion()

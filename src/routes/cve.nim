@@ -1,8 +1,8 @@
 import jester, karax/[karaxdsl, vdom]
-import strformat, strutils
 
-import ../db
-import ../views/[general, cve]
+#import ../db
+import ../models/cve
+import ../views/[general]
 
 proc showCve*(request: Request; cve: Cve): string =
   ## Pretty much `show*` is the controller, which passed on to `render*` view actions
@@ -12,16 +12,14 @@ proc showCve*(request: Request; cve: Cve): string =
 
   renderMain(vnode, request, "CVE")
 
-proc createCveRouter*(dbClient: DbClient) =
-  router cve:
-    get "/@year/@sequence":
-      var y, seq: int
+#proc createCveRouter*(dbClient: DbClient) =
+#  router cve:
+#    get "/@year/@sequence":
+#      var year, sequence: int
 #      try:
-#        y = parseInt(@"year")
-#        seq = parseInt(@"sequence")
-      y = 2020
-      seq = 14882
+#        year = parseInt(@"year")
+#        sequence = parseInt(@"sequence")
 #      except ValueError:
 #        echo "no no no"
-      let cve = await dbClient.getCveBySequence(y, seq)
-      resp showCve(request, cve)
+#      let cve = await dbClient.getCveBySequence(year, sequence)
+#      resp showCve(request, cve)

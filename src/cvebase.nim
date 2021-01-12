@@ -3,29 +3,43 @@
 
 import htmlgen
 import jester
+import strutils
 
 import config
 import routes/[cve]
 import db
 
+var
+  dbClient {.threadvar.}: DbClient
+
 const configPath {.strdefine.} = "./cvebase.conf"
 let (cfg, fullCfg) = getConfig(configPath)
 
-let dbClient = waitFor initDbClient("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
-
-# Initialize controllers
-# createWelcomeRouter() # /
-createCveRouter(dbClient) # /cve
-# /poc
-# /researcher
-# /bugbounty
-# /lab
-
+dbClient = waitFor initDbClient("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
 
 settings:
   port = Port(cfg.port)
   staticDir = cfg.staticDir
   bindAddr = cfg.address
+
+# Initialize routes
+# /
+# /cve
+# /poc
+# /researcher
+# /bugbounty
+# /lab
+
+router cve: # namespace: /cve
+  get "/@year/@sequence":
+    var year, sequence: int
+    try:
+      year = parseInt(@"year")
+      sequence = parseInt(@"sequence")
+    except ValueError:
+      raise
+    let cve = await dbClient.getCveBySequence(year, sequence)
+    resp showCve(request, cve)
 
 routes:
   get "/":
@@ -35,7 +49,9 @@ routes:
     resp Http404, "Looks you took a wrong turn somewhere."
 
   error Exception:
-    resp Http500, "Something bad happened: " & exception.msg
+    # FIXME replace with debug logging
+    echo "error: " & exception.msg
+    resp Http500, "Something bad happened."
 
 #  error Http404:
 #    resp Http404, or("Page not found", cfg)
