@@ -1,17 +1,21 @@
 # This is just an example to get you started. A typical hybrid package
 # uses this file as the main entry point of the application.
 
-import config
 import htmlgen
 import jester
+
+import config
 import routes/[cve]
+import db
 
 const configPath {.strdefine.} = "./cvebase.conf"
 let (cfg, fullCfg) = getConfig(configPath)
 
+let dbClient = waitFor initDbClient("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
+
 # Initialize controllers
 # createWelcomeRouter() # /
-createCveRouter() # /cve
+createCveRouter(dbClient) # /cve
 # /poc
 # /researcher
 # /bugbounty

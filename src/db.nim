@@ -2,6 +2,7 @@ import asyncdispatch, strformat, json, tables
 import asyncpg
 
 import models/[cve]
+export cve
 
 type
   DbClient* = ref object
