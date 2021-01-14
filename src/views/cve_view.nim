@@ -1,7 +1,8 @@
 import std/times
 import karax/[karaxdsl, vdom]
 
-import ../models/[cve]
+import ../models/cve
+import ../helpers
 
 proc renderHero(cve: Cve): VNode =
   buildHtml(section(class="hero is-black is-medium",id="page-hero")):
@@ -107,11 +108,12 @@ proc renderCve*(cve: Cve): VNode =
               summary():
                 text "View list"
               ul(id="references"):
-                li():
-                  a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href="https://pillow.readthedocs.io/en/stable/releasenotes/index.html"):
-                    text "pillow.readthedocs.io/en/.../index.html"
-                    span(class="icon has-text-grey-light is-size-6"):
-                      i(class="fas fa-external-link-square-alt")
+                for item in cve.refUrls:
+                  li():
+                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=item):
+                      text peekCveLink(item)
+                      span(class="icon has-text-grey-light is-size-6"):
+                        i(class="fas fa-external-link-square-alt")
             h3():
               text "What Others Are Saying About This"
             article(class="media"):

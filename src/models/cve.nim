@@ -1,7 +1,7 @@
 import os
 import times
 
-import ../helpers
+import ../concerns
 
 type
   Cve* = object

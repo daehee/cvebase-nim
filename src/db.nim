@@ -30,19 +30,17 @@ proc parsePgDateTime*(s: string): DateTime =
 ## Cve
 
 template parseCveRow*(row: Row): Cve =
-  let
-    cveId = row[1]
-    year = parseInt(row[2])
-    sequence = parseInt(row[3])
-    cveData = parseJson(row[4])
-    description = cveData["cve"]["description"]["description_data"][0]["value"].getStr()
-    pubDate = parsePgDateTime(cveData["publishedDate"].getStr())
+  let cveData = parseJson(row[4])
+  var refUrls: seq[string] = @[]
+  for item in cveData["cve"]["references"]["reference_data"]:
+    refUrls.add(item["url"].getStr())
   Cve(
-    cveId: cveId,
-    year: year,
-    sequence: sequence,
-    description: description,
-    pubDate: pubDate,
+    cveId: row[1],
+    year: parseInt(row[2]),
+    sequence: parseInt(row[3]),
+    description: cveData["cve"]["description"]["description_data"][0]["value"].getStr(),
+    refUrls: refUrls,
+    pubDate: parsePgDateTime(cveData["publishedDate"].getStr()),
   )
 
 proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =

@@ -3,7 +3,7 @@ import jester, karax/[karaxdsl, vdom]
 
 import ../db
 import ../models/[cve]
-import ../views/[layout_v, cve_v]
+import ../views/[layout_view, cve_view]
 
 proc showCve*(request: Request; paramYear, paramSeq: string): Future[string] {.async.} =
   var year, seq: int
