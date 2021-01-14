@@ -1,8 +1,7 @@
 import std/[strutils]
-import jester, karax/[karaxdsl, vdom]
+import jester
 
 import ../db
-import ../models/[cve]
 import ../views/[layout_view, cve_view]
 
 proc showCve*(request: Request; paramYear, paramSeq: string): Future[string] {.async.} =
@@ -12,7 +11,7 @@ proc showCve*(request: Request; paramYear, paramSeq: string): Future[string] {.a
 
   let cve = await dbClient.getCveBySequence(year, seq)
 
-  return renderMain(renderCve(cve), request, "CVE")
+  return renderMain(renderCve(cve), renderHero(cve), request, "CVE")
 
 proc showCveYear*(request: Request, paramYear: string): Future[string] {.async.} =
   var year: int

@@ -1,5 +1,7 @@
-import uri, strutils, strformat
-import jester, karax/[karaxdsl, vdom]
+import jester, karax/[karaxdsl, vdom, vstyles]
+
+type
+  HeroVNode* = distinct VNode
 
 const
   doctype = "<!DOCTYPE html>\n"
@@ -9,9 +11,15 @@ proc renderHead*(): VNode =
     title:
       text "replace me  title"
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    link(rel="stylesheet", type="text/css", href="/css/style.css?v=3")
+    # TODO add canonical
+    # TODO add og and twitter meta tags
+    # TODO add fontawesome
+    # TODO add application javascript
+    # TODO add google analytics
 
 proc renderNavBar*(): VNode =
-  buildHtml(nav):
+  buildHtml(nav(class = "main-nav navbar is-black is-spaced", style = "border: none".toCss)):
     tdiv(class="container"):
       tdiv(class="navbar-brand"):
         tdiv(aria-label="menu",role="button",aria-expanded="false",class="navbar-burger burger"):
@@ -40,7 +48,7 @@ proc renderNavBar*(): VNode =
               i(class="fab fa-twitter")
 
 proc renderFooter*(): VNode =
-  buildHtml(footer):
+  buildHtml(footer(class = "footer")):
     tdiv(class="container"):
       tdiv(class="columns"):
         tdiv(class="column"):
@@ -109,6 +117,17 @@ proc renderMain*(body: VNode; req: Request; titleText=""; desc=""): string =
 
   result = doctype & $node
 
+proc renderMain*(body: VNode; hero: HeroVNode; req: Request; titleText=""; desc=""): string =
+  ## Overloaded with hero
+  let node = buildHtml(html(lang="en")):
+    renderHead()
+    body:
+      renderNavBar()
+      hero.VNode
+      body
+      renderFooter()
+
+  result = doctype & $node
 
 proc renderError*(error: string): VNode =
   buildHtml(tdiv(class="panel-container")):

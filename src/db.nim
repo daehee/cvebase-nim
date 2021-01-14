@@ -54,7 +54,8 @@ proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =
   result = parseCveRow(row)
 
 proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
-  let res = await cl.conn.exec(&"{selectCveFields} where cve_id = $1", cveId)
+  var param = cveId
+  let res = await cl.conn.exec(&"{selectCveFields} where cve_id = $1", param)
   let row = res[0].getRow()
   result = parseCveRow(row)
 

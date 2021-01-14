@@ -3,13 +3,15 @@ import karax/[karaxdsl, vdom]
 
 import ../models/cve
 import ../helpers
+import layout_view
 
-proc renderHero(cve: Cve): VNode =
-  buildHtml(section(class="hero is-black is-medium",id="page-hero")):
+proc renderHero*(cve: Cve): HeroVNode =
+  let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):
     tdiv(class="hero-body"):
       tdiv(class="container has-text-centered"):
         h1(class="title is-2"):
           text cve.cveId
+  hero.HeroVNode # Explicit type conversion to distinct type
 
 proc renderSidebar(cve: Cve): VNode =
   buildHtml(tdiv(class="column is-3 is-offset-1")):
@@ -58,7 +60,6 @@ proc renderBreadCrumbs(cve: Cve): VNode =
 
 proc renderCve*(cve: Cve): VNode =
   buildHtml(section(class="section")):
-    renderHero(cve)
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
         tdiv(class="column"):

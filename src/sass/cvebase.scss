@@ -1,0 +1,96 @@
+#welcome-hero {
+  h1 {
+    font-weight: 400;
+    strong {
+      font-weight: 600;
+    }
+  }
+  h2 {
+    color: $grey-light;
+  }
+}
+
+.card > .card-content > .content {
+  overflow-x: hidden;
+}
+
+.article-hacktivity > .media-content {
+  overflow-x: hidden;
+}
+
+#page-hero {
+  h1 {
+    font-weight: 400;
+    strong {
+      font-weight: 600;
+    }
+  }
+  h2 {
+    color: $grey-light;
+  }
+}
+
+.welcome-strip {
+  .strip-header {
+    margin-bottom: 3rem;
+    text-align: center !important;
+    h3.title {
+      font-weight: 400;
+    }
+  }
+  .section-cta {
+    margin-top: 1em;
+  }
+}
+
+
+.content details {
+  margin-bottom: 1em;
+}
+
+.content details > summary {
+  color: $primary;
+}
+
+#researcher .profile-link {
+  @include block(.5rem)
+}
+
+#researcher-index {
+  .researcher-activity-card {
+    @include block;
+
+    .card-header-title {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+
+      span.researcher-name, span.researcher-cve {
+        display: inline-flex;
+        white-space: nowrap;
+      }
+
+      span.researcher-name {
+        padding-right: 0.75em;
+      }
+    }
+  }
+}
+
+.tag.is-severity-low {
+  background-color: #3298dc;
+}
+
+.tag.is-severity-medium {
+  background-color: #ffdd57;
+  color: $grey-dark;
+}
+
+.tag.is-severity-high {
+  background-color: #ff7518;
+}
+
+.tag.is-severity-critical {
+  background-color: #ff2e12;
+}
+

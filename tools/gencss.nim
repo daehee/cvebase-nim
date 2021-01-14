@@ -1,6 +1,6 @@
 import sass
 
-compileFile("src/sass/index.scss",
+compileFile("src/sass/application.scss",
             outputPath = "public/css/style.css",
             includePaths = @["src/sass/include"])
 
