@@ -1,3 +1,4 @@
+import std/times
 import karax/[karaxdsl, vdom]
 
 import ../models/[cve]
@@ -42,17 +43,17 @@ proc renderBreadCrumbs(cve: Cve): VNode =
   buildHtml(nav(class="breadcrumb")):
     ul():
       li():
-        a(href="/cve"):
+        a(href = "/cve"):
           text "CVE"
       li():
-        a(href="/cve/2021"):
-          text "2021"
+        a(href = cve.linkToYear()):
+          text $cve.pubDate.year()
       li():
-        a(href="/cve/2021/m/1"):
-          text "January"
+        a(href = cve.linkToMonth()):
+          text $cve.pubDate.month()
       li(class="is-active"):
-        a(href="/cve/2020/35655"):
-          text "CVE-2020-35655"
+        a(href=cve.linkTo()):
+          text cve.cveId
 
 proc renderCve*(cve: Cve): VNode =
   buildHtml(section(class="section")):

@@ -1,4 +1,4 @@
-import std/[asyncdispatch, strformat, json, tables, times]
+import std/[asyncdispatch, strformat, json, tables, times, strutils]
 import asyncpg
 
 import models/[cve]
@@ -32,20 +32,28 @@ proc parsePgDateTime*(s: string): DateTime =
 template parseCveRow*(row: Row): Cve =
   let
     cveId = row[1]
-    cveData = parseJson(row[2])
+    year = parseInt(row[2])
+    sequence = parseInt(row[3])
+    cveData = parseJson(row[4])
     description = cveData["cve"]["description"]["description_data"][0]["value"].getStr()
     pubDate = parsePgDateTime(cveData["publishedDate"].getStr())
-  Cve(cveId: cveId, description: description, pubDate: pubDate)
+  Cve(
+    cveId: cveId,
+    year: year,
+    sequence: sequence,
+    description: description,
+    pubDate: pubDate,
+  )
 
 proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =
   var params = {"year": year, "seq": seq}.toTable
-  let res = await cl.conn.exec("select id, cve_id, data from cves where year = $1 and sequence = $2", params["year"], params["seq"])
+  let res = await cl.conn.exec("select id, cve_id, year, sequence, data from cves where year = $1 and sequence = $2", params["year"], params["seq"])
   let row = res[0].getRow()
   result = parseCveRow(row)
 
 proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
   var param = cveId
-  let res = await cl.conn.exec("select id, cve_id, data from cves where cve_id = $1", param)
+  let res = await cl.conn.exec("select id, cve_id, year, sequence, data from cves where cve_id = $1", param)
   let row = res[0].getRow()
   result = parseCveRow(row)
 

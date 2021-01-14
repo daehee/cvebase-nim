@@ -1,4 +1,7 @@
+import os
 import times
+
+import ../helpers
 
 type
   Cve* = object
@@ -10,6 +13,8 @@ type
     refUrls*: seq[string]
     cvss3*: float
 
+  CveYear* = object
+
   # TODO split into own model files
   Product* = object
     name*: string
@@ -19,3 +24,11 @@ type
     name*: string
     products*: seq[Product]
 
+proc linkTo*(cve: Cve): string =
+  relPath("cve", cve.year, cve.sequence)
+
+proc linkToYear*(cve: Cve): string =
+  relPath("cve", cve.pubDate.year())
+
+proc linkToMonth*(cve: Cve): string =
+  relPath("cve", cve.pubDate.year(), "m", cve.pubDate.month().ord())
