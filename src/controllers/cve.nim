@@ -7,15 +7,18 @@ import ../views/[layout_view, cve_view]
 
 proc showCve*(request: Request; paramYear, paramSeq: string): Future[string] {.async.} =
   var year, seq: int
-  try:
-    year = parseInt(paramYear)
-    seq = parseInt(paramSeq)
-  except ValueError:
-    raise
+  year = parseInt(paramYear)
+  seq = parseInt(paramSeq)
 
   let cve = await dbClient.getCveBySequence(year, seq)
 
-  let vnode = buildHtml(tdiv(class="yeet")):
-    renderCve(cve)
+  return renderMain(renderCve(cve), request, "CVE")
 
-  return renderMain(vnode, request, "CVE")
+proc showCveYear*(request: Request, paramYear: string): Future[string] {.async.} =
+  var year: int
+  year = parseInt(paramYear)
+
+  let cves = await dbClient.getCvesByYear(year)
+
+  discard
+#  return renderMain(renderCveYear(cves), request, "CVE Year")

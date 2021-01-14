@@ -29,7 +29,7 @@ proc parsePgDateTime*(s: string): DateTime =
 
 ## Cve
 
-template parseCveRow*(row: Row): Cve =
+proc parseCveRow*(row: Row): Cve {.inline.} =
   let cveData = parseJson(row[4])
   var refUrls: seq[string] = @[]
   for item in cveData["cve"]["references"]["reference_data"]:
@@ -43,15 +43,23 @@ template parseCveRow*(row: Row): Cve =
     pubDate: parsePgDateTime(cveData["publishedDate"].getStr()),
   )
 
+const
+  resultsPerPage = 10
+
+  selectCveFields = "select id, cve_id, year, sequence, data from cves"
+
 proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =
-  var params = {"year": year, "seq": seq}.toTable
-  let res = await cl.conn.exec("select id, cve_id, year, sequence, data from cves where year = $1 and sequence = $2", params["year"], params["seq"])
+  let res = await cl.conn.exec(&"{selectCveFields} where year = $1 and sequence = $2", year, seq)
   let row = res[0].getRow()
   result = parseCveRow(row)
 
 proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
-  var param = cveId
-  let res = await cl.conn.exec("select id, cve_id, year, sequence, data from cves where cve_id = $1", param)
+  let res = await cl.conn.exec(&"{selectCveFields} where cve_id = $1", cveId)
   let row = res[0].getRow()
   result = parseCveRow(row)
 
+proc getCvesByYear*(cl: DbClient; year, page: int = 0): Future[seq[Cve]] {.async.} =
+  let offset = page * resultsPerPage
+  let res = await cl.conn.exec(&"{selectCveFields} where extract(year from published_date) = $1 order by cve_pocs_count desc nulls last limit 10 offset $2", year, offset)
+  for item in res[0].getAllRows():
+    result.add parseCveRow(item)
