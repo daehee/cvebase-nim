@@ -1,26 +1,26 @@
-import std/[asyncdispatch, strformat, json, tables, times, strutils]
-import asyncpg
+import std/[asyncdispatch, strformat, json, tables, times, strutils, uri]
+import pg
 
 import models/[cve]
 
 type
   DbClient* = ref object
-    conn: apgPool
+    conn: AsyncPool
     connStr: string
 
 var
   dbClient* {.threadvar.}: DbClient
 
 proc initDbClient*(connStr: string): Future[DBClient] {.async.} =
-  let pool = newPool()
-  await pool.connect(connStr)
-  return DBClient(conn: pool, connStr: connStr)
+  let uri = parseUri(connStr)
+  let pg = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
+  return DBClient(conn: pg, connStr: connStr)
 
 #proc setDbClient*(connStr: string) =
 #  dbClient = waitFor initDbClient(connStr)
 
-proc close*(cl: DbClient) =
-  cl.conn.close()
+#proc close*(cl: DbClient) =
+#  cl.conn.close()
 
 proc parsePgDateTime*(s: string): DateTime =
   # Example: "2006-01-02T15:04Z"
@@ -49,18 +49,16 @@ const
   selectCveFields = "select id, cve_id, year, sequence, data from cves"
 
 proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =
-  let res = await cl.conn.exec(&"{selectCveFields} where year = $1 and sequence = $2", year, seq)
-  let row = res[0].getRow()
-  result = parseCveRow(row)
+  let rows = await cl.conn.rows(sql(&"{selectCveFields} where year = ? and sequence = ?"), @[$year, $seq])
+  result = parseCveRow(rows[0])
 
 proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
   var param = cveId
-  let res = await cl.conn.exec(&"{selectCveFields} where cve_id = $1", param)
-  let row = res[0].getRow()
-  result = parseCveRow(row)
+  let rows = await cl.conn.rows(sql(&"{selectCveFields} where cve_id = ?"), @[param])
+  result = parseCveRow(rows[0])
 
 proc getCvesByYear*(cl: DbClient; year, page: int = 0): Future[seq[Cve]] {.async.} =
   let offset = page * resultsPerPage
-  let res = await cl.conn.exec(&"{selectCveFields} where extract(year from published_date) = $1 order by cve_pocs_count desc nulls last limit 10 offset $2", year, offset)
-  for item in res[0].getAllRows():
+  let rows = await cl.conn.rows(sql(&"{selectCveFields} where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?"), @[$year, $offset])
+  for item in rows:
     result.add parseCveRow(item)

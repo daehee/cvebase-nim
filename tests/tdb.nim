@@ -24,4 +24,4 @@ suite "db tests":
       let cve = waitFor dbClient.getCveByCveId("CVE-2020-14882")
       checkCve cve
 
-  dbClient.close()
+#  dbClient.close()
