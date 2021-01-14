@@ -1,4 +1,4 @@
-import std/times
+import times
 
 type
   Cve* = object
@@ -10,6 +10,7 @@ type
     refUrls*: seq[string]
     cvss3*: float
 
+  # TODO split into own model files
   Product* = object
     name*: string
     uriShort*: string
@@ -18,7 +19,3 @@ type
     name*: string
     products*: seq[Product]
 
-proc parsePgDateTime*(s: string): DateTime =
-  # Example: "2006-01-02T15:04Z"
-  let layout = "yyyy-MM-dd'T'HH:mm'Z'"
-  s.parse(layout, utc())

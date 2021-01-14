@@ -3,10 +3,9 @@
 
 import htmlgen
 import jester
-import strutils
 
 import config
-import routes/[cve]
+import controllers/[cve]
 import db
 
 const configPath {.strdefine.} = "./cvebase.conf"
@@ -31,14 +30,7 @@ settings:
 
 router cve: # namespace: /cve
   get "/@year/@sequence":
-    var year, sequence: int
-    try:
-      year = parseInt(@"year")
-      sequence = parseInt(@"sequence")
-    except ValueError:
-      raise
-    let cve = await dbClient.getCveBySequence(year, sequence)
-    resp showCve(request, cve)
+    resp await showCve(request, @"year", @"sequence")
 
 routes:
   get "/":
@@ -54,6 +46,6 @@ routes:
     echo "error 500: " & request.ip & " -> " & request.path & " : " & exception.msg
     resp Http500, "Something bad happened."
 
-  # Extend routes with custom routers
+  # Extend routes with custom routers declared above
   extend cve, "/cve"
 

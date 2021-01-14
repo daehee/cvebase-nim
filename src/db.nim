@@ -1,8 +1,7 @@
-import asyncdispatch, strformat, json, tables
+import std/[asyncdispatch, strformat, json, tables, times]
 import asyncpg
 
 import models/[cve]
-export cve
 
 type
   DbClient* = ref object
@@ -19,6 +18,16 @@ proc initDbClient*(connStr: string): Future[DBClient] {.async.} =
 
 #proc setDbClient*(connStr: string) =
 #  dbClient = waitFor initDbClient(connStr)
+
+proc close*(cl: DbClient) =
+  cl.conn.close()
+
+proc parsePgDateTime*(s: string): DateTime =
+  # Example: "2006-01-02T15:04Z"
+  let layout = "yyyy-MM-dd'T'HH:mm'Z'"
+  s.parse(layout, utc())
+
+## Cve
 
 template parseCveRow*(row: Row): Cve =
   let
@@ -39,7 +48,4 @@ proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
   let res = await cl.conn.exec("select id, cve_id, data from cves where cve_id = $1", param)
   let row = res[0].getRow()
   result = parseCveRow(row)
-
-proc close*(cl: DbClient) =
-  cl.conn.close()
 
