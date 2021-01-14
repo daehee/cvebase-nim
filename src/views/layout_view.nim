@@ -12,9 +12,9 @@ proc renderHead*(): VNode =
       text "replace me  title"
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     link(rel="stylesheet", type="text/css", href="/css/style.css?v=3")
+    script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
     # TODO add canonical
     # TODO add og and twitter meta tags
-    # TODO add fontawesome
     # TODO add application javascript
     # TODO add google analytics
 
