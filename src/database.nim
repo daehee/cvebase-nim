@@ -57,7 +57,7 @@ proc getCveBySequence*(year, seq: int): Future[Cve] {.async.} =
   # Relational queries for rest of fields
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
-  result.pocs = parsePidx fieldocs(await db.rows(cvePocsQuery, @[id]))
+  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
   echo result.cwe
 
 #proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
