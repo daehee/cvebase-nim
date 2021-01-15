@@ -18,6 +18,11 @@ proc showCveYear*(request: Request, paramYear: string): Future[string] {.async.}
   year = parseInt(paramYear)
 
   let cves = await dbClient.getCvesByYear(year)
+  return renderMain(renderCveYear(cves), request, "CVE Year")
 
-  discard
-#  return renderMain(renderCveYear(cves), request, "CVE Year")
+proc showCveYear*(request: Request; paramYear, paramPage: string): Future[string] {.async.} =
+  var year: int
+  year = parseInt(paramYear)
+
+  let cves = await dbClient.getCvesByYear(year)
+  return renderMain(renderCveYear(cves), request, "CVE Year")

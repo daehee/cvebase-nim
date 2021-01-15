@@ -31,6 +31,8 @@ settings:
 router cve: # namespace: /cve
   get "/@year/@sequence":
     resp await showCve(request, @"year", @"sequence")
+  get "/@year?page=@page":
+    resp await showCveYear(request, @"year", @"page")
   get "/@year":
     resp await showCveYear(request, @"year")
 

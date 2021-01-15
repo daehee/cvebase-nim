@@ -126,3 +126,69 @@ proc renderCve*(cve: Cve): VNode =
                     br()
                     text "PYTHON Multiples vulnerabilidades de severidad alta en productos PYTHON: CVE-2020-35654,CVE-2020-35653,CVE-2020-35655 Mas info en: "
         renderSidebar(cve)
+
+proc renderCveYearBreadcrumbs(): VNode =
+  buildHtml():
+    nav(class="breadcrumb"):
+      ul():
+        li():
+          a(href="/cve"):
+            text "CVE"
+        li(class="is-active"):
+          a(href="/cve/1996"):
+            text "1996"
+
+proc renderCveCard(cve:Cve): VNode =
+  buildHtml():
+    tdiv(class="column is-half"):
+      tdiv(class="card"):
+        header(class="card-header"):
+          p(class="card-header-title"):
+            a(class="has-text-primary-light is-size-5",href=linkTo(cve)):
+              text cve.cveId
+          tdiv(class="card-header-icon"):
+            tdiv(class="tags"):
+              span(class="tag is-dark"):
+                text "N/A"
+        tdiv(class="card-content has-background-black"):
+          p():
+            text cve.description
+            br()
+            small(class="has-text-grey-light is-size-7"):
+              text "almost 25 years ago "
+        footer(class="card-footer"):
+          p(class="card-footer-item"):
+            span(class="is-size-7"):
+              a(class="has-text-white",href="/cve/1999/70"):
+                text "show details"
+          p(class="card-footer-item"):
+            span(class="is-size-7"):
+              a(class="has-text-white",href="/cve/1999/70"):
+                text "show details"
+
+proc renderCveYear*(cves: seq[Cve]): VNode =
+  buildHtml():
+    section(class="section"):
+      tdiv(class="container is-widescreen"):
+        tdiv(class="columns"):
+          tdiv(class="column"):
+            renderCveYearBreadcrumbs()
+            tdiv(class="columns is-multiline"):
+              for cve in cves:
+                renderCveCard(cve)
+            hr()
+          tdiv(class="column is-2"):
+            aside(class="menu"):
+              p(class="menu-label"):
+                text "Browse By Date "
+              ul(class="menu-list"):
+                li():
+                  a(class="",href="/cve/2021"):
+                    text "2021"
+                  ul():
+                    li():
+                      a(href="/cve/1996/m/4"):
+                        text "April"
+                    li():
+                      a(href="/cve/1996/m/2"):
+                        text "February"

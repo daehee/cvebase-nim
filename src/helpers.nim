@@ -27,3 +27,14 @@ end
 
   return parsed.hostname & parsed.path
 
+proc truncate*(s: string, truncAt: int): string =
+  ## Truncates a given text after a given length if text is longer than length
+  let suffix = "..."
+  var count: int
+  for (word, _) in tokenize(s):
+    if count >= truncAt - suffix.len():
+      result.add suffix
+      break
+    result.add word
+    count.inc word.len()
+
