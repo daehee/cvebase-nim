@@ -1,4 +1,4 @@
-import std/[asyncdispatch, strformat, json, tables, times, strutils, uri]
+import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
 import pg
 
 import models/[cve]
@@ -54,7 +54,7 @@ proc getCveBySequence*(year, seq: int): Future[Cve] {.async.} =
     cweId = rows[0][5]
   result = parseCveRow(rows[0])
   if cweId.len() > 0:
-    result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId]))
+    result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
   echo result.cwe
 

@@ -1,4 +1,4 @@
-import std/[times, strformat]
+import std/[times, strformat, options]
 import karax/[karaxdsl, vdom]
 
 import ../models/cve
@@ -78,11 +78,11 @@ proc renderCve*(cve: Cve): VNode =
                   text "HIGH"
             p():
               text cve.description
-            if cve.cwe.name != "":
+            if cve.cwe.isSome():
               h5():
-                text &"Weakness: {cve.cwe.name}"
+                text &"Weakness: {cve.cwe.get().name}"
               p():
-                text cve.cwe.description
+                text cve.cwe.get().description
             p():
               small(class="has-text-grey-light"):
                 text "Published: 2021-01-12 "

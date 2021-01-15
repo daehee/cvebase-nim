@@ -1,4 +1,4 @@
-import times
+import std/[times, options]
 
 import ../concerns
 
@@ -12,7 +12,7 @@ type
     refUrls*: seq[string]
     cvss3*: float
     pocs*: seq[Poc]
-    cwe*: Cwe
+    cwe*: Option[Cwe]
 
   Cwe* = object
     name*: string
