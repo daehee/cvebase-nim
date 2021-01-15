@@ -3,21 +3,13 @@ import pg
 
 import models/[cve]
 
-type
-  DbClient* = ref object
-    conn: AsyncPool
-    connStr: string
+var db* {.threadvar.}: AsyncPool
 
-var
-  dbClient* {.threadvar.}: DbClient
-
-proc initDbClient*(connStr: string): DBClient =
+proc dbConnect*(connStr: string) =
   let uri = parseUri(connStr)
-  let pg = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
-  return DBClient(conn: pg, connStr: connStr)
+  # TODO make pool connections a config variable
+  db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
 
-#proc close*(cl: DbClient) =
-#  cl.conn.close()
 
 proc parsePgDateTime*(s: string): DateTime =
   # Example: "2006-01-02T15:04Z"
@@ -45,17 +37,17 @@ const
 
   selectCveFields = "select id, cve_id, year, sequence, data from cves"
 
-proc getCveBySequence*(cl: DbClient; year, seq: int): Future[Cve] {.async.} =
-  let rows = await cl.conn.rows(sql(&"{selectCveFields} where year = ? and sequence = ?"), @[$year, $seq])
+proc getCveBySequence*(year, seq: int): Future[Cve] {.async.} =
+  let rows = await db.rows(sql(&"{selectCveFields} where year = ? and sequence = ?"), @[$year, $seq])
   result = parseCveRow(rows[0])
 
-proc getCveByCveId*(cl: DbClient, cveId: string): Future[Cve] {.async.} =
+proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
   var param = cveId
-  let rows = await cl.conn.rows(sql(&"{selectCveFields} where cve_id = ?"), @[param])
+  let rows = await db.rows(sql(&"{selectCveFields} where cve_id = ?"), @[param])
   result = parseCveRow(rows[0])
 
-proc getCvesByYear*(cl: DbClient; year, page: int = 0): Future[seq[Cve]] {.async.} =
+proc getCvesByYear*(year, page: int = 0): Future[seq[Cve]] {.async.} =
   let offset = page * resultsPerPage
-  let rows = await cl.conn.rows(sql(&"{selectCveFields} where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?"), @[$year, $offset])
+  let rows = await db.rows(sql(&"{selectCveFields} where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?"), @[$year, $offset])
   for item in rows:
     result.add parseCveRow(item)

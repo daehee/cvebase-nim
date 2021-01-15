@@ -2,14 +2,14 @@ import std/[logging]
 
 import prologue
 import prologue/middlewares/staticfile
+import pg
 
 import config
 import routes
 #import controllers/[cve]
-import db
+import database
 
 var cfg {.threadvar.}: config.Config
-cfg = configureApp()
 
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
@@ -18,34 +18,24 @@ proc setLoggingLevel() =
   else:
     logging.setLogFilter(lvlAll)
 
-proc setDbClient() {.gcsafe.} =
-  dbClient = initDbClient(cfg.dbUrl)
+cfg = configureApp()
+dbConnect(cfg.dbUrl)
 
 let
   logEvent = initEvent(setLoggingLevel)
-  dbEvent = initEvent(setDbClient)
-
-#dbClient = initDbClient(cfg.dbUrl)
-
-let settings = newSettings(
-  appName = cfg.appName,
-  debug = cfg.debug,         # TODO get this from config
-  port = Port(cfg.port),
-  secretKey = cfg.secretKey,   # TODO get this from config
-)
-var app = newApp(settings = settings, startup = @[logEvent, dbEvent])
+  settings = newSettings(
+    appName = cfg.appName,
+    debug = cfg.debug,         # TODO get this from config
+    port = Port(cfg.port),
+    secretKey = cfg.secretKey,   # TODO get this from config
+  )
+var app = newApp(settings = settings, startup = @[logEvent])
 
 # Serve static files from CDN in production
 when not defined(production):
   app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")
 app.run()
-
-# Set jester settings
-#settings:
-#  port = Port(cfg.port)
-#  staticDir = cfg.staticDir
-#  bindAddr = cfg.address
 
 # Initialize routes
 # /
