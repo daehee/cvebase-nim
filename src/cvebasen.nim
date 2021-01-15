@@ -13,10 +13,10 @@ var cfg {.threadvar.}: config.Config
 
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
-  when defined(release):
-    logging.setLogFilter(lvlError)
-  else:
-    logging.setLogFilter(lvlAll)
+  # when defined(release):
+  #   logging.setLogFilter(lvlError)
+  # else:
+  logging.setLogFilter(lvlAll)
 
 cfg = configureApp()
 dbConnect(cfg.dbUrl)
