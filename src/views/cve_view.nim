@@ -1,4 +1,4 @@
-import std/times
+import std/[times, strformat]
 import karax/[karaxdsl, vdom]
 
 import ../models/cve
@@ -17,18 +17,18 @@ proc renderSidebar(cve: Cve): VNode =
   buildHtml(tdiv(class="column is-3 is-offset-1")):
     aside(class="menu"):
       p(class="menu-label"):
-        text "CVE-2020-35655 Dorks "
+        text &"{cve.cveId} Dorks"
       ul(class="menu-list"):
         li():
-          a(target="_blank",rel="nofollow",href="https://twitter.com/search?q=%22CVE-2020-35655%22"):
+          a(target="_blank",rel="nofollow",href = &"https://twitter.com/search?q=%22{cve.cveId}%22"):
             span(class="icon"):
               italic(class="fas fa-search")
             text "Twitter "
-          a(target="_blank",rel="nofollow",href="https://www.google.com/search?q=CVE-2020-35655"):
+          a(target="_blank",rel="nofollow",href = &"https://www.google.com/search?q={cve.cveId}"):
             span(class="icon"):
               italic(class="fas fa-search")
             text "Google "
-          a(target="_blank",rel="nofollow",href="https://www.youtube.com/results?search_query=CVE-2020-35655"):
+          a(target="_blank",rel="nofollow",href = &"https://www.youtube.com/results?search_query={cve.cveId}"):
             span(class="icon"):
               italic(class="fas fa-search")
             text "YouTube "
@@ -39,8 +39,8 @@ proc renderSidebar(cve: Cve): VNode =
           a(href="/cve"):
             text "Popular CVEs"
         li():
-          a(href="/cve/2021/m/1"):
-            text "January 2021 CVEs"
+          a(href = cve.linkToMonth()):
+            text &"{$cve.pubDate.month()} {$cve.pubDate.year()} CVEs"
 
 proc renderBreadCrumbs(cve: Cve): VNode =
   buildHtml(nav(class="breadcrumb")):
@@ -68,6 +68,7 @@ proc renderCve*(cve: Cve): VNode =
             tdiv(class="columns is-vcentered is-mobile"):
               tdiv(class="column is-three-fifths-touch is-one-third-widescreen"):
                 progress(max="10",class="progress is-small is-danger",value="8.1"):
+                  # TODO Add
                   text "8.1%"
               tdiv(class="column"):
                 span(class="is-size-5 has-text-weight-bold"):
@@ -77,10 +78,11 @@ proc renderCve*(cve: Cve): VNode =
                   text "HIGH"
             p():
               text cve.description
-            h5():
-              text "Weakness: Out-of-bounds Read"
-            p():
-              text "The software reads data past the end, or before the beginning, of the intended buffer."
+            if cve.cwe.name != "":
+              h5():
+                text &"Weakness: {cve.cwe.name}"
+              p():
+                text cve.cwe.description
             p():
               small(class="has-text-grey-light"):
                 text "Published: 2021-01-12 "
@@ -125,16 +127,6 @@ proc renderCve*(cve: Cve): VNode =
                       text peekCveLink(item)
                       span(class="icon has-text-grey-light is-size-6"):
                         italic(class="fas fa-external-link-square-alt")
-            h3():
-              text "What Others Are Saying About This"
-            article(class="media"):
-              tdiv(class="media-content"):
-                tdiv(class="content"):
-                  p():
-                    small():
-                      text "@GrupoICA_Ciber"
-                    br()
-                    text "PYTHON Multiples vulnerabilidades de severidad alta en productos PYTHON: CVE-2020-35654,CVE-2020-35653,CVE-2020-35655 Mas info en: "
         renderSidebar(cve)
 
 proc renderCveYearBreadcrumbs(): VNode =

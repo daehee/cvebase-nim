@@ -36,25 +36,32 @@ proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
   for row in rows:
     result.add Poc(url: row[0])
 
+proc parseCwe(rows: seq[Row]): Cwe =
+  Cwe(name: rows[0][0], description: rows[0][1])
+
 const
   resultsPerPage = 10
 
-  selectCveFields = "select id, cve_id, year, sequence, data from cves"
-  cveBySequenceQuery = sql(&"{selectCveFields} where year = ? and sequence = ?")
-  cveByCveIdQuery = sql(&"{selectCveFields} where cve_id = ?")
-  cvesByYearQuery = sql(&"{selectCveFields} where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?")
+  cveBySequenceQuery = sql("select id, cve_id, year, sequence, data, cwe_id from cves where year = ? and sequence = ?")
+  cvesByYearQuery = sql("select id, cve_id, year, sequence, data from cves where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?")
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
+  cveCweQuery = sql("select name, description from cwes where id = ?")
 
 proc getCveBySequence*(year, seq: int): Future[Cve] {.async.} =
-  let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
-  let id = rows[0][0]
+  let
+    rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
+    id = rows[0][0]
+    cweId = rows[0][5]
   result = parseCveRow(rows[0])
+  if cweId.len() > 0:
+    result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId]))
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
+  echo result.cwe
 
-proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
-  var param = cveId
-  let rows = await db.rows(cveByCveIdQuery, @[param])
-  result = parseCveRow(rows[0])
+#proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
+#  var param = cveId
+#  let rows = await db.rows(cveByCveIdQuery, @[param])
+#  result = parseCveRow(rows[0])
 
 proc getCvesByYear*(year, page: int = 0): Future[seq[Cve]] {.async.} =
   let offset = page * resultsPerPage

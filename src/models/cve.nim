@@ -3,7 +3,7 @@ import times
 import ../concerns
 
 type
-  Cve* = ref object
+  Cve* = object
     cveId*: string
     year*: int
     sequence*: int
@@ -12,6 +12,11 @@ type
     refUrls*: seq[string]
     cvss3*: float
     pocs*: seq[Poc]
+    cwe*: Cwe
+
+  Cwe* = object
+    name*: string
+    description*: string
 
   Poc* = object
     url*: string
