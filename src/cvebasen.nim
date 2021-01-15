@@ -35,7 +35,9 @@ let settings = newSettings(
 )
 var app = newApp(settings = settings, startup = @[logEvent, dbEvent])
 
-app.use(staticFileMiddleware(cfg.staticDir))
+# Serve static files from CDN in production
+when not defined(production):
+  app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")
 app.run()
 

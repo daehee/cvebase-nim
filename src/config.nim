@@ -2,6 +2,7 @@ import std/[os, strutils]
 
 type
   Config* = ref object
+    # env*: string
     address*: string
     port*: int
     useHttps*: bool
@@ -18,6 +19,7 @@ type
 
 proc configureApp*(): Config =
   Config(
+    # env: getEnv("PLG_ENV", "development"),
     address: getEnv("PLG_ADDRESS", "0.0.0.0"),
     port: getEnv("PLG_PORT", "6969").parseInt(),
     useHttps: getEnv("PLG_HTTPS", "false").parseBool(),
