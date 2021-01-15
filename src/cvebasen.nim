@@ -32,7 +32,7 @@ let
 var app = newApp(settings = settings, startup = @[logEvent])
 
 # Serve static files from CDN in production
-when not defined(production):
+when not defined(release):
   app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")
 app.run()

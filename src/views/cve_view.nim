@@ -97,6 +97,16 @@ proc renderCve*(cve: Cve): VNode =
                   text "Improve Advisory"
             h3():
               text "Proof-of-Concept Exploits"
+            details():
+              summary():
+                text "View list"
+              ul(id="pocs"):
+                for item in cve.pocs:
+                  li():
+                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=item.url):
+                      text peekCveLink(item.url)
+                      span(class="icon has-text-grey-light is-size-6"):
+                        italic(class="fas fa-external-link-square-alt")
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/"):
                 span(class="icon"):

@@ -3,7 +3,7 @@ import times
 import ../concerns
 
 type
-  Cve* = object
+  Cve* = ref object
     cveId*: string
     year*: int
     sequence*: int
@@ -11,8 +11,11 @@ type
     pubDate*: DateTime
     refUrls*: seq[string]
     cvss3*: float
+    pocs*: seq[Poc]
 
-  CveYear* = object
+  Poc* = object
+    url*: string
+    updatedAt*: DateTime
 
   # TODO split into own model files
   Product* = object
