@@ -8,26 +8,32 @@ import routes
 #import controllers/[cve]
 import db
 
-const configPath {.strdefine.} = "./cvebase.conf"
+var cfg {.threadvar.}: config.Config
+cfg = configureApp()
 
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
-  logging.setLogFilter(lvlAll)
+  when defined(release):
+    logging.setLogFilter(lvlError)
+  else:
+    logging.setLogFilter(lvlAll)
+
+proc setDbClient() {.gcsafe.} =
+  dbClient = initDbClient(cfg.dbUrl)
 
 let
-  event = initEvent(setLoggingLevel)
-  (cfg, fullCfg) = getConfig(configPath)
+  logEvent = initEvent(setLoggingLevel)
+  dbEvent = initEvent(setDbClient)
 
-# Initialize postgres DB
-dbClient = waitFor initDbClient(cfg.dbConn)
+#dbClient = initDbClient(cfg.dbUrl)
 
 let settings = newSettings(
-  appName = "cvebase",
-  debug = true,         # TODO get this from config
+  appName = cfg.appName,
+  debug = cfg.debug,         # TODO get this from config
   port = Port(cfg.port),
-  secretKey = "test",   # TODO get this from config
+  secretKey = cfg.secretKey,   # TODO get this from config
 )
-var app = newApp(settings = settings, startup = @[event])
+var app = newApp(settings = settings, startup = @[logEvent, dbEvent])
 
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")

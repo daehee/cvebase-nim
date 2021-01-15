@@ -11,13 +11,10 @@ type
 var
   dbClient* {.threadvar.}: DbClient
 
-proc initDbClient*(connStr: string): Future[DBClient] {.async.} =
+proc initDbClient*(connStr: string): DBClient =
   let uri = parseUri(connStr)
   let pg = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
   return DBClient(conn: pg, connStr: connStr)
-
-#proc setDbClient*(connStr: string) =
-#  dbClient = waitFor initDbClient(connStr)
 
 #proc close*(cl: DbClient) =
 #  cl.conn.close()

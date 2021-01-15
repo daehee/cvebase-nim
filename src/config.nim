@@ -1,47 +1,30 @@
-import parsecfg except Config
-import strutils
+import std/[os, strutils]
 
 type
   Config* = ref object
     address*: string
     port*: int
     useHttps*: bool
-    title*: string
+    appName*: string
+    debug*: bool
     hostname*: string
     staticDir*: string
-    dbConn*: string
-
+    secretKey*: string
+    dbUrl*: string
     # redisHost*: string
     # redisPort*: int
     # redisConns*: int
     # redisMaxConns*: int
 
-
-proc get*[T](config: parseCfg.Config; s, v: string; default: T): T =
-  let val = config.getSectionValue(s, v)
-  if val.len == 0: return default
-
-  when T is int: parseInt(val)
-  elif T is bool: parseBool(val)
-  elif T is string: val
-
-
-proc getConfig*(path: string): (Config, parseCfg.Config) =
-  var cfg = loadConfig(path)
-
-  let conf = Config(
-    address: cfg.get("Server", "address", "0.0.0.0"),
-    port: cfg.get("Server", "port", 8080),
-    useHttps: cfg.get("Server", "https", true),
-    title: cfg.get("Server", "title", "cvebase"),
-    hostname: cfg.get("Server", "hostname", "cvebase.com"),
-    staticDir: cfg.get("Server", "staticDir", "/public"),
-    dbConn: cfg.get("Server", "dbConn", "")
-
-    # redisHost: cfg.get("Cache", "redisHost", "localhost"),
-    # redisPort: cfg.get("Cache", "redisPort", 6379),
-    # redisConns: cfg.get("Cache", "redisConnections", 20),
-    # redisMaxConns: cfg.get("Cache", "redisMaxConnections", 30)
+proc configureApp*(): Config =
+  Config(
+    address: getEnv("PLG_ADDRESS", "0.0.0.0"),
+    port: getEnv("PLG_PORT", "6969").parseInt(),
+    useHttps: getEnv("PLG_HTTPS", "false").parseBool(),
+    appName: getEnv("PLG_APPNAME", "cvebase"),
+    debug: getEnv("PLG_DEBUG", "true").parseBool(),
+    hostname: getEnv("PLG_HOSTNAME", "cvebase.com"),
+    staticDir: getEnv("PLG_STATICDIR", "/public"),
+    secretKey: getEnv("PLG_SECRET", "s3cret"), # TODO Update this
+    dbUrl: getEnv("DATABASE_URL", ""),
   )
-
-  return (conf, cfg)
