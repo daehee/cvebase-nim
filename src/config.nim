@@ -35,7 +35,7 @@ proc getConfig*(path: string): (Config, parseCfg.Config) =
     useHttps: cfg.get("Server", "https", true),
     title: cfg.get("Server", "title", "cvebase"),
     hostname: cfg.get("Server", "hostname", "cvebase.com"),
-    staticDir: cfg.get("Server", "staticDir", "./public"),
+    staticDir: cfg.get("Server", "staticDir", "/public"),
     dbConn: cfg.get("Server", "dbConn", "")
 
     # redisHost: cfg.get("Cache", "redisHost", "localhost"),

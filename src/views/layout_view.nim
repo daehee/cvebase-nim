@@ -1,4 +1,4 @@
-import jester, karax/[karaxdsl, vdom, vstyles]
+import karax/[karaxdsl, vdom, vstyles]
 
 type
   HeroVNode* = distinct VNode
@@ -11,7 +11,7 @@ proc renderHead*(): VNode =
     title:
       text "replace me  title"
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    link(rel="stylesheet", type="text/css", href="/css/style.css?v=3")
+    link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
     script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
     # TODO add canonical
     # TODO add og and twitter meta tags
@@ -42,10 +42,10 @@ proc renderNavBar*(): VNode =
             text "Learn"
           a(target="_blank",class="navbar-item",href="https://github.com/cvebase/cvebase.com"):
             span(class="icon"):
-              i(class="fab fa-github")
+              italic(class="fab fa-github")
           a(target="_blank",class="navbar-item",href="https://twitter.com/cvebase"):
             span(class="icon"):
-              i(class="fab fa-twitter")
+              italic(class="fab fa-twitter")
 
 proc renderFooter*(): VNode =
   buildHtml(footer(class = "footer")):
@@ -85,15 +85,15 @@ proc renderFooter*(): VNode =
             ul(class="menu-list"):
               a(target="_blank",href="https://twitter.com/cvebase"):
                 span(class="icon"):
-                  i(class="fab fa-twitter")
+                  italic(class="fab fa-twitter")
                 text "Twitter "
               a(target="_blank",href="https://www.linkedin.com/company/cvebase"):
                 span(class="icon"):
-                  i(class="fab fa-linkedin")
+                  italic(class="fab fa-linkedin")
                 text "Linkedin "
               a(target="_blank",href="https://github.com/cvebase/cvebase.com"):
                 span(class="icon"):
-                  i(class="fab fa-github")
+                  italic(class="fab fa-github")
                 text "GitHub "
     br()
     tdiv(class="container"):
@@ -107,7 +107,7 @@ proc renderFooter*(): VNode =
               a(href="https://creativecommons.org/licenses/by-nc-sa/4.0/"):
                 text "CC BY-NC-SA 4.0"
 
-proc renderMain*(body: VNode; req: Request; titleText=""; desc=""): string =
+proc renderMain*(body: VNode; titleText=""; desc=""): string =
   let node = buildHtml(html(lang="en")):
     renderHead()
     body:
@@ -117,7 +117,7 @@ proc renderMain*(body: VNode; req: Request; titleText=""; desc=""): string =
 
   result = doctype & $node
 
-proc renderMain*(body: VNode; hero: HeroVNode; req: Request; titleText=""; desc=""): string =
+proc renderMain*(body: VNode; hero: HeroVNode; titleText=""; desc=""): string =
   ## Overloaded with hero
   let node = buildHtml(html(lang="en")):
     renderHead()

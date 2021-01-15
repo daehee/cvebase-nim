@@ -22,15 +22,15 @@ proc renderSidebar(cve: Cve): VNode =
         li():
           a(target="_blank",rel="nofollow",href="https://twitter.com/search?q=%22CVE-2020-35655%22"):
             span(class="icon"):
-              i(class="fas fa-search")
+              italic(class="fas fa-search")
             text "Twitter "
           a(target="_blank",rel="nofollow",href="https://www.google.com/search?q=CVE-2020-35655"):
             span(class="icon"):
-              i(class="fas fa-search")
+              italic(class="fas fa-search")
             text "Google "
           a(target="_blank",rel="nofollow",href="https://www.youtube.com/results?search_query=CVE-2020-35655"):
             span(class="icon"):
-              i(class="fas fa-search")
+              italic(class="fas fa-search")
             text "YouTube "
       p(class="menu-label"):
         text "Related Vulnerabilities "
@@ -92,7 +92,7 @@ proc renderCve*(cve: Cve): VNode =
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com"):
                 span(class="icon"):
-                  i(class="fab fa-github")
+                  italic(class="fab fa-github")
                 span():
                   text "Improve Advisory"
             h3():
@@ -100,7 +100,7 @@ proc renderCve*(cve: Cve): VNode =
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/"):
                 span(class="icon"):
-                  i(class="fab fa-github")
+                  italic(class="fab fa-github")
                 span():
                   text "Add PoC"
             h3():
@@ -114,7 +114,7 @@ proc renderCve*(cve: Cve): VNode =
                     a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=item):
                       text peekCveLink(item)
                       span(class="icon has-text-grey-light is-size-6"):
-                        i(class="fas fa-external-link-square-alt")
+                        italic(class="fas fa-external-link-square-alt")
             h3():
               text "What Others Are Saying About This"
             article(class="media"):
