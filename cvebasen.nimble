@@ -5,7 +5,6 @@ author        = "cvebase"
 description   = "cvebase.com"
 license       = "MIT"
 srcDir        = "src"
-skipExt       = @["nim"]
 bin           = @["cvebasen"]
 
 
