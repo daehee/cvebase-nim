@@ -50,12 +50,14 @@ const
 proc getCveBySequence*(year, seq: int): Future[Cve] {.async.} =
   let
     rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
-    id = rows[0][0]
-    cweId = rows[0][5]
+    id = rows[0][0] # field idx 0
+    cweId = rows[0][5] # field idx 5
+  # Build basic Cve object
   result = parseCveRow(rows[0])
+  # Relational queries for rest of fields
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
-  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
+  result.pocs = parsePidx fieldocs(await db.rows(cvePocsQuery, @[id]))
   echo result.cwe
 
 #proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
