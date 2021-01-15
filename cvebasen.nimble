@@ -26,6 +26,7 @@ task release, "Build a production release":
   --opt:speed
   --define:release
   --define:ssl
+  --define:usestd
   --hints:off
   --outdir:"."
   setCommand "c", "src/cvebasen.nim"
