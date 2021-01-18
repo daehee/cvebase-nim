@@ -2,7 +2,6 @@ import std/[logging]
 
 import prologue
 import prologue/middlewares/staticfile
-import pg
 
 import config
 import routes

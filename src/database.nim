@@ -1,5 +1,5 @@
 import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
-import pg
+import db/pg
 
 import models/[cve]
 

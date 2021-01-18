@@ -2,7 +2,8 @@ import unittest
 import std/[asyncdispatch, times]
 
 import models/cve
-import db
+import database
+import db/pg
 
 template checkCve(cve: Cve) =
   check cve.cveId == "CVE-2020-14882"
@@ -13,15 +14,11 @@ template checkCve(cve: Cve) =
   check cve.refUrls.len() == 3
 
 suite "db tests":
-  let dbClient = waitFor initDbClient("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
+  dbConnect("postgres://postgres:yeetya123@localhost:5432/cvebase_development")
 
   test "getCve":
     block:
-      let cve = waitFor dbClient.getCveBySequence(2020, 14882)
+      let cve = waitFor getCveBySequence(2020, 14882)
       checkCve cve
 
-    block:
-      let cve = waitFor dbClient.getCveByCveId("CVE-2020-14882")
-      checkCve cve
-
-#  dbClient.close()
+  waitFor db.close()

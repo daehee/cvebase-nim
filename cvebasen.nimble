@@ -12,10 +12,8 @@ bin           = @["cvebasen"]
 
 requires "nim >= 1.4.2"
 requires "jester >= 0.5.0"
-requires "karax >= 1.1.2"
+requires "karax >= 1.2.1"
 requires "sass#e683aa1"
-requires "pg#5739d1a"
-requires "print"
 requires "prologue"
 
 # Tasks
@@ -35,4 +33,7 @@ task scss, "Generate css":
   exec "nim c --hint[Processing]:off -r tools/gencss"
 
 task server, "Run server":
-  exec "nim c -r src/app.nim"
+  exec "nim c -r src/cvebasen.nim"
+
+task testdb, "Test db":
+  exec "nim c -r tests/tdb.nim"
