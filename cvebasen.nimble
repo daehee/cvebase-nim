@@ -33,3 +33,6 @@ task release, "Build a production release":
 
 task scss, "Generate css":
   exec "nim c --hint[Processing]:off -r tools/gencss"
+
+task server, "Run server":
+  exec "nim c -r src/app.nim"

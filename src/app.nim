@@ -25,15 +25,15 @@ let
   logEvent = initEvent(setLoggingLevel)
   settings = newSettings(
     appName = cfg.appName,
-    debug = cfg.debug,         # TODO get this from config
+    debug = cfg.debug,
     port = Port(cfg.port),
-    secretKey = cfg.secretKey,   # TODO get this from config
+    secretKey = cfg.secretKey,
   )
 var app = newApp(settings = settings, startup = @[logEvent])
 
 # Serve static files from CDN in production
-when not defined(release):
-  app.use(staticFileMiddleware(cfg.staticDir))
+# when not defined(release):
+app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")
 app.run()
 
