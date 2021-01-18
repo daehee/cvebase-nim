@@ -1,15 +1,16 @@
-import std/[logging]
+import std/[logging, uri, strutils]
+
+import globals
 
 import prologue
 import prologue/middlewares/staticfile
 
 import config
 import routes
+from db/pg import newAsyncPool
 #import controllers/[cve]
 
 var cfg {.threadvar.}: config.Config
-
-var db* {.threadvar.}: AsyncPool
 
 proc dbConnect*(connStr: string) =
   let uri = parseUri(connStr)

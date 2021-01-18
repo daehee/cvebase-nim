@@ -2,15 +2,17 @@ import std/[strutils]
 
 import prologue
 
-import ../database
+import ../db/queries
 import ../views/[layout_view, cve_view]
+
+import ../globals
 
 proc showCve*(ctx: Context) {.async.} =
   var year, seq: int
   year = parseInt(ctx.getPathParams("year"))
   seq = parseInt(ctx.getPathParams("sequence"))
 
-  let cve = await getCveBySequence(year, seq)
+  let cve = await db.getCveBySequence(year, seq)
 
   resp renderMain(renderCve(cve), renderHero(cve), "CVE")
 
