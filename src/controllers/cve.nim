@@ -32,4 +32,8 @@ proc showCveYear*(ctx: Context) {.async.} =
     respDefault Http404
     return
   # TODO: Replace title
-  resp renderMain(renderCveYear(cves), "CVE Year")
+  # https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
+  # If cves.hasNext
+#  nextUrl = linkTo()
+#  prevUrl =
+  resp renderMain(ctx.renderCveYear(cves), "CVE Year")

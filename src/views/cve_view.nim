@@ -1,6 +1,8 @@
 import std/[times, strformat, options]
 import karax/[karaxdsl, vdom]
 
+import prologue/core/context
+
 import ../models/cve
 import ../helpers
 import layout_view
@@ -140,13 +142,13 @@ proc renderCveYearBreadcrumbs(): VNode =
           a(href="/cve/1996"):
             text "1996"
 
-proc renderCveCard(cve:Cve): VNode =
+proc renderCveCard(ctx: Context, cve:Cve): VNode =
   buildHtml():
     tdiv(class="column is-half"):
       tdiv(class="card"):
         header(class="card-header"):
           p(class="card-header-title"):
-            a(class="has-text-primary-light is-size-5",href=linkTo(cve)):
+            a(class = "has-text-primary-light is-size-5", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
               text cve.cveId
           tdiv(class="card-header-icon"):
             tdiv(class="tags"):
@@ -168,7 +170,7 @@ proc renderCveCard(cve:Cve): VNode =
               a(class="has-text-white",href="/cve/1999/70"):
                 text "show details"
 
-proc renderCveYear*(cves: seq[Cve]): VNode =
+proc renderCveYear*(ctx: Context, cves: seq[Cve]): VNode =
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
@@ -177,7 +179,7 @@ proc renderCveYear*(cves: seq[Cve]): VNode =
             renderCveYearBreadcrumbs()
             tdiv(class="columns is-multiline"):
               for cve in cves:
-                renderCveCard(cve)
+                ctx.renderCveCard(cve)
             hr()
           tdiv(class="column is-2"):
             aside(class="menu"):

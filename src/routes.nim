@@ -7,6 +7,6 @@ let
 #    pattern("/", views.read, @[HttpGet], name = "index")
 #  ]
   cvePatterns* = @[
-    pattern("/{year}/{sequence}", cve.showCve, @[HttpGet]),
-    pattern("/{year}", cve.showCveYear, @[HttpGet]),
+    pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
+    pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
   ]
