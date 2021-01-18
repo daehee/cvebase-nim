@@ -6,9 +6,15 @@ import prologue/middlewares/staticfile
 import config
 import routes
 #import controllers/[cve]
-import database
 
 var cfg {.threadvar.}: config.Config
+
+var db* {.threadvar.}: AsyncPool
+
+proc dbConnect*(connStr: string) =
+  let uri = parseUri(connStr)
+  # TODO make pool connections a config variable
+  db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
 
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
