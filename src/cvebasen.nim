@@ -37,10 +37,14 @@ let
   )
 var app = newApp(settings = settings, startup = @[logEvent])
 
+proc go404*(ctx: Context) {.async.} =
+  resp "Looks like you took a wrong turn somewhere.", Http404
+
 # Serve static files from CDN in production
 # when not defined(release):
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(routes.cvePatterns, "/cve")
+app.registerErrorHandler(Http404, go404)
 app.run()
 
 # Initialize routes
