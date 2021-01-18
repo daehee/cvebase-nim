@@ -3,6 +3,7 @@ import std/[strutils]
 import prologue
 
 import ../db/queries
+import ../models/cve
 import ../views/[layout_view, cve_view]
 
 import ../globals
@@ -14,18 +15,21 @@ proc showCve*(ctx: Context) {.async.} =
 
   let cve = await db.getCveBySequence(year, seq)
 
+  # TODO: Replace title
   resp renderMain(renderCve(cve), renderHero(cve), "CVE")
 
-#proc showCveYear*(request: Request, paramYear: string): Future[string] {.async.} =
-#  var year: int
-#  year = parseInt(paramYear)
-#
-#  let cves = await dbClient.getCvesByYear(year)
-#  return renderMain(renderCveYear(cves), request, "CVE Year")
-#
-#proc showCveYear*(request: Request; paramYear, paramPage: string): Future[string] {.async.} =
-#  var year: int
-#  year = parseInt(paramYear)
-#
-#  let cves = await dbClient.getCvesByYear(year)
-#  return renderMain(renderCveYear(cves), request, "CVE Year")
+proc showCveYear*(ctx: Context) {.async.} =
+  var year: int
+  year = parseInt(ctx.getPathParams("year"))
+  let pageParam = ctx.getQueryParams("page")
+  var cves: seq[Cve]
+  if pageParam != "":
+    let pageNum = parseInt(pageParam)
+    cves = await db.getCvesByYear(year, pageNum)
+  else:
+    cves = await db.getCvesByYear(year)
+  if len(cves) == 0:
+    respDefault Http404
+    return
+  # TODO: Replace title
+  resp renderMain(renderCveYear(cves), "CVE Year")
