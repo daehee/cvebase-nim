@@ -30,12 +30,3 @@ type
   Vendor* = object
     name*: string
     products*: seq[Product]
-
-proc linkTo*(cve: Cve): string =
-  relPath("cve", cve.year, cve.sequence)
-
-proc linkToYear*(cve: Cve): string =
-  relPath("cve", cve.pubDate.year())
-
-proc linkToMonth*(cve: Cve): string =
-  relPath("cve", cve.pubDate.year(), "m", cve.pubDate.month().ord())

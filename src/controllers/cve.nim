@@ -16,7 +16,7 @@ proc showCve*(ctx: Context) {.async.} =
   let cve = await db.getCveBySequence(year, seq)
 
   # TODO: Replace title
-  resp renderMain(renderCve(cve), renderHero(cve), "CVE")
+  resp renderMain(ctx.renderCve(cve), renderHero(cve), "CVE")
 
 proc showCveYear*(ctx: Context) {.async.} =
   var year: int

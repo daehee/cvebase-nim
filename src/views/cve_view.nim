@@ -41,31 +41,31 @@ proc renderSidebar(cve: Cve): VNode =
           a(href="/cve"):
             text "Popular CVEs"
         li():
-          a(href = cve.linkToMonth()):
+          a(href = "REPLACEME"):
             text &"{$cve.pubDate.month()} {$cve.pubDate.year()} CVEs"
 
-proc renderBreadCrumbs(cve: Cve): VNode =
+proc renderBreadCrumbs(ctx: Context, cve: Cve): VNode =
   buildHtml(nav(class="breadcrumb")):
     ul():
       li():
         a(href = "/cve"):
           text "CVE"
       li():
-        a(href = cve.linkToYear()):
+        a(href = ctx.urlFor("cveYear", {"year": $cve.year})):
           text $cve.pubDate.year()
       li():
-        a(href = cve.linkToMonth()):
+        a(href = "REPLACEME"):
           text $cve.pubDate.month()
       li(class="is-active"):
-        a(href=cve.linkTo()):
+        a(href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
           text cve.cveId
 
-proc renderCve*(cve: Cve): VNode =
+proc renderCve*(ctx: Context, cve: Cve): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
         tdiv(class="column"):
-          renderBreadcrumbs(cve)
+          ctx.renderBreadcrumbs(cve)
           tdiv(class="content",id="description"):
             tdiv(class="columns is-vcentered is-mobile"):
               tdiv(class="column is-three-fifths-touch is-one-third-widescreen"):
