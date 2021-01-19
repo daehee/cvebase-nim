@@ -26,14 +26,13 @@ suite "db tests":
   test "getCvesByYear":
     block:
       let pgn = waitFor db.getCvesByYear(2020)
-      echo pgn.query.string
-      echo pgn.page
-      echo pgn.perPage
-      echo pgn.total
-      echo pgn.pages
-      echo pgn.nextNum
-      echo pgn.prevNum
-      echo pgn.hasPrev
-      echo pgn.hasNext
+      check pgn.page == 1
+      check pgn.perPage == 10
+      check pgn.total > 0
+      check pgn.pages > 0
+      check pgn.nextNum == 2
+      check pgn.prevNum == 0
+      check pgn.hasNext == true
+      check pgn.hasPrev == false
 
   waitFor db.close()

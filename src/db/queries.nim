@@ -56,7 +56,6 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
-  echo result.cwe
 
 #proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
 #  var param = cveId
