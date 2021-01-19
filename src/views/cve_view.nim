@@ -3,10 +3,9 @@ import karax/[karaxdsl, vdom]
 
 import prologue/core/context
 
-import ../models/cve
+import ../models/[cve, pagination]
 import ../helpers
 import layout_view
-import ../daum/pagination
 
 proc renderHero*(cve: Cve): HeroVNode =
   let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):

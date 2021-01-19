@@ -1,8 +1,7 @@
 import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
 
 import ./pg
-import ../daum/pagination
-import ../models/[cve]
+import ../models/[cve, pagination]
 
 proc parsePgDateTime*(s: string): DateTime =
   # Example: "2006-01-02T15:04Z"

@@ -1,9 +1,8 @@
 import unittest
 import std/[asyncdispatch, times, uri, strutils, options]
 
-import models/cve
+import models/[cve, pagination]
 import db/[pg, queries]
-import daum/pagination
 
 template checkCve(cve: Cve) =
   check cve.cveId == "CVE-2020-14882"

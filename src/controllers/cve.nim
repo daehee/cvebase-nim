@@ -3,9 +3,8 @@ import std/[strutils]
 import prologue
 
 import ../db/queries
-import ../models/cve
+import ../models/[cve, pagination]
 import ../views/[layout_view, cve_view]
-import ../daum/pagination
 
 import ../globals
 
