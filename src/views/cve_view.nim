@@ -157,7 +157,7 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
                 text "N/A"
         tdiv(class="card-content has-background-black"):
           p():
-            text cve.description
+            text truncate(cve.description, 180)
             br()
             small(class="has-text-grey-light is-size-7"):
               text "almost 25 years ago "

@@ -29,12 +29,11 @@ end
 
 proc truncate*(s: string, truncAt: int): string =
   ## Truncates a given text after a given length if text is longer than length
-  let suffix = "..."
-  var count: int
-  for (word, _) in tokenize(s):
-    if count >= truncAt - suffix.len():
-      result.add suffix
-      break
-    result.add word
-    count.inc word.len()
-
+  result = s
+  if s.len > truncAt:
+    var i = truncAt
+    while i > 0 and s[i] notin Whitespace:
+      dec i
+    while i > 0 and s[i] in Whitespace: dec i
+    setLen result, i+1
+    result.add "..."
