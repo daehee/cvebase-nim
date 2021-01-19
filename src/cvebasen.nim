@@ -8,7 +8,7 @@ import
 import
   globals,
   config,
-  controllers/cve
+  controllers/[cve_ctrl]
 from db/pg import newAsyncPool
 
 
