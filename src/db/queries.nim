@@ -1,7 +1,7 @@
 import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
 
 import ./pg
-import daum/pagination
+import ../daum/pagination
 import ../models/[cve]
 
 proc parsePgDateTime*(s: string): DateTime =
@@ -63,14 +63,15 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 #  let rows = await db.rows(cveByCveIdQuery, @[param])
 #  result = parseCveRow(rows[0])
 
-template paginateQuery(countQuery: SqlQuery, countParams: seq[string]): untyped =
+template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =
   ## Injects offset and count variables for paginated queries
   let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
   let countResult = await db.rows(countQuery, countParams)
   let count {.inject.} = parseInt(countResult[0][0])
+  # TODO: Error if invalid page number i.e. page > pages available
 
 proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
-  paginateQuery(cvesByYearCountQuery, @[$year])
+  paginateQuery(cvesByYearCountQuery, @[$year], page)
   let rows = await db.rows(cvesByYearQuery, @[$year, $offset])
   # TODO: Change to "seek" technique to reduce to single query without offset
   result = newPagination[Cve](cvesByYearQuery, page, resultsPerPage, count, newSeq[Cve]())

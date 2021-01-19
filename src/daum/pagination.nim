@@ -30,11 +30,11 @@ proc hasPrev*(pgn: Pagination): bool =
 proc hasNext*(pgn: Pagination): bool =
   pgn.page < pgn.pages
 
-proc nextNum*(pgn: Pagination): Option[int] =
-  if pgn.hasNext: return some(pgn.page + 1)
+proc nextNum*(pgn: Pagination): int =
+  if pgn.hasNext: return pgn.page + 1
 
-proc prevNum*(pgn: Pagination): Option[int] =
-  if pgn.hasPrev: return some(pgn.page - 1)
+proc prevNum*(pgn: Pagination): int =
+  if pgn.hasPrev: return pgn.page - 1
 
 proc pages*(pgn: Pagination): int =
   ## Total number of pages

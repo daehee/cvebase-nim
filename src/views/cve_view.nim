@@ -6,6 +6,7 @@ import prologue/core/context
 import ../models/cve
 import ../helpers
 import layout_view
+import ../daum/pagination
 
 proc renderHero*(cve: Cve): HeroVNode =
   let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):
@@ -170,7 +171,7 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
               a(class="has-text-white",href="/cve/1999/70"):
                 text "show details"
 
-proc renderCveYear*(ctx: Context, cves: seq[Cve]): VNode =
+proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
@@ -178,9 +179,16 @@ proc renderCveYear*(ctx: Context, cves: seq[Cve]): VNode =
           tdiv(class="column"):
             renderCveYearBreadcrumbs()
             tdiv(class="columns is-multiline"):
-              for cve in cves:
+              for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
+            nav(class = "pagination"):
+              if pgn.hasPrev:
+                a(class = "pagination-previous", href = ctx.urlFor("cveYear", {"year": ctx.getPathParams("year")}, {"page": $pgn.prevNum})):
+                  text "Previous"
+              if pgn.hasNext:
+                a(class = "pagination-next", href = ctx.urlFor("cveYear", {"year": ctx.getPathParams("year")}, {"page": $pgn.nextNum})):
+                  text "Next page"
           tdiv(class="column is-2"):
             aside(class="menu"):
               p(class="menu-label"):
