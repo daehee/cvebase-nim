@@ -1,9 +1,9 @@
 import unittest
-import std/[asyncdispatch, times, uri, strutils]
+import std/[asyncdispatch, times, uri, strutils, options]
 
 import models/cve
-import database
 import db/[pg, queries]
+import daum/pagination
 
 template checkCve(cve: Cve) =
   check cve.cveId == "CVE-2020-14882"
@@ -16,11 +16,24 @@ template checkCve(cve: Cve) =
 suite "db tests":
   let connStr = "postgres://postgres:yeetya123@localhost:5432/cvebase_development"
   let uri = parseUri(connStr)
-  db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
+  let db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
 
-  test "getCve":
+  test "getCveBySequence":
     block:
       let cve = waitFor db.getCveBySequence(2020, 14882)
       checkCve cve
+
+  test "getCvesByYear":
+    block:
+      let pgn = waitFor db.getCvesByYear(2020)
+      echo pgn.query.string
+      echo pgn.page
+      echo pgn.perPage
+      echo pgn.total
+      echo pgn.pages
+      echo pgn.nextNum
+      echo pgn.prevNum
+      echo pgn.hasPrev
+      echo pgn.hasNext
 
   waitFor db.close()

@@ -1,6 +1,7 @@
 import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
-import ./pg
 
+import ./pg
+import daum/pagination
 import ../models/[cve]
 
 proc parsePgDateTime*(s: string): DateTime =
@@ -36,6 +37,7 @@ const
 
   cveBySequenceQuery = sql("select id, cve_id, year, sequence, data, cwe_id from cves where year = ? and sequence = ?")
   cvesByYearQuery = sql("select id, cve_id, year, sequence, data from cves where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?")
+  cvesByYearCountQuery = sql("select count(*) from cves where extract(year from published_date) = ?")
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
   cveCweQuery = sql("select name, description from cwes where id = ?")
 
@@ -57,8 +59,16 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 #  let rows = await db.rows(cveByCveIdQuery, @[param])
 #  result = parseCveRow(rows[0])
 
-proc getCvesByYear*(db: AsyncPool; year, page: int = 0): Future[seq[Cve]] {.async.} =
-  let offset = page * resultsPerPage
+template paginateQuery(countQuery: SqlQuery, countParams: seq[string]): untyped =
+  ## Injects offset and count variables for paginated queries
+  let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
+  let countResult = await db.rows(countQuery, countParams)
+  let count {.inject.} = parseInt(countResult[0][0])
+
+proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
+  paginateQuery(cvesByYearCountQuery, @[$year])
   let rows = await db.rows(cvesByYearQuery, @[$year, $offset])
+  # TODO: Change to "seek" technique to reduce to single query without offset
+  result = newPagination[Cve](cvesByYearQuery, page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
-    result.add parseCveRow(item)
+    result.items.add parseCveRow(item)
