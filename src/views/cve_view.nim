@@ -1,4 +1,4 @@
-import std/[times, strformat, options]
+import std/[times, strformat, options, strtabs]
 import karax/[karaxdsl, vdom]
 
 import prologue/core/context
@@ -132,7 +132,7 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                         italic(class="fas fa-external-link-square-alt")
         renderSidebar(cve)
 
-proc renderCveYearBreadcrumbs(): VNode =
+proc renderCveYearBreadcrumbs(ctx: Context): VNode =
   buildHtml():
     nav(class="breadcrumb"):
       ul():
@@ -140,8 +140,8 @@ proc renderCveYearBreadcrumbs(): VNode =
           a(href="/cve"):
             text "CVE"
         li(class="is-active"):
-          a(href="/cve/1996"):
-            text "1996"
+          a(href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")})):
+            text ctx.getPathParams("year")
 
 proc renderCveCard(ctx: Context, cve:Cve): VNode =
   buildHtml():
@@ -160,16 +160,14 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
             text truncate(cve.description, 180)
             br()
             small(class="has-text-grey-light is-size-7"):
-              text "almost 25 years ago "
+              text cve.pubDate.ago
         footer(class="card-footer"):
           p(class="card-footer-item"):
             span(class="is-size-7"):
-              a(class="has-text-white",href="/cve/1999/70"):
+              a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
                 text "show details"
-          p(class="card-footer-item"):
-            span(class="is-size-7"):
-              a(class="has-text-white",href="/cve/1999/70"):
-                text "show details"
+          p(class="card-footer-item")
+          # TODO: PoC exploits available
 
 proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
   buildHtml():
@@ -177,17 +175,17 @@ proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
-            renderCveYearBreadcrumbs()
+            ctx.renderCveYearBreadcrumbs()
             tdiv(class="columns is-multiline"):
               for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
             nav(class = "pagination"):
               if pgn.hasPrev:
-                a(class = "pagination-previous", href = ctx.urlFor("cveYear", {"year": ctx.getPathParams("year")}, {"page": $pgn.prevNum})):
+                a(class = "pagination-previous", href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")}, {"page": $pgn.prevNum})):
                   text "Previous"
               if pgn.hasNext:
-                a(class = "pagination-next", href = ctx.urlFor("cveYear", {"year": ctx.getPathParams("year")}, {"page": $pgn.nextNum})):
+                a(class = "pagination-next", href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")}, {"page": $pgn.nextNum})):
                   text "Next page"
           tdiv(class="column is-2"):
             aside(class="menu"):

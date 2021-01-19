@@ -33,4 +33,6 @@ proc showCveYear*(ctx: Context) {.async.} =
     respDefault Http404
     return
   # TODO: Replace title
+  # Set year in ctx using first cve item (prevent injection of variable in template)
+  ctx.ctxData["year"] = $pgn.items[0].year
   resp renderMain(ctx.renderCveYear(pgn), "CVE Year")
