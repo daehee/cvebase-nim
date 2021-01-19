@@ -36,7 +36,11 @@ const
   resultsPerPage = 10
 
   cveBySequenceQuery = sql("select id, cve_id, year, sequence, data, cwe_id from cves where year = ? and sequence = ?")
-  cvesByYearQuery = sql("select id, cve_id, year, sequence, data from cves where extract(year from published_date) = ? order by cve_pocs_count desc nulls last limit 10 offset ?")
+  cvesByYearQuery = sql("""select id, cve_id, year, sequence, data from cves
+    where extract(year from published_date) = ?
+    order by cve_pocs_count
+    desc nulls last
+    limit 10 offset ?""".unindent)
   cvesByYearCountQuery = sql("select count(*) from cves where extract(year from published_date) = ?")
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
   cveCweQuery = sql("select name, description from cwes where id = ?")
