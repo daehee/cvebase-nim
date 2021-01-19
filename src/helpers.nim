@@ -49,7 +49,7 @@ proc pluralize(i: int64, s: string): string =
   result = &"{i} {s}"
   if i != 1: result.add "s"
 
-proc timeAgoInWords*(fromTime: DateTime): string =
+proc ago*(fromTime: DateTime): string =
   # https://github.com/justincampbell/timeago/blob/master/timeago.go
   let dur = now() - fromTime
   let sec = dur.inSeconds # in seconds
