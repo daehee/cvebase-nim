@@ -1,7 +1,5 @@
 import std/[times, options]
 
-import ../concerns
-
 type
   Cve* = object
     cveId*: string

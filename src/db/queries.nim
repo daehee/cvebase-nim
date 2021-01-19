@@ -1,4 +1,4 @@
-import std/[asyncdispatch, strformat, json, tables, times, strutils, uri, options]
+import std/[asyncdispatch, json, tables, times, strutils, options]
 
 import ./pg
 import ../models/[cve, pagination]

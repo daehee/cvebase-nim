@@ -4,7 +4,7 @@ import karax/[karaxdsl, vdom]
 import prologue/core/context
 
 import ../models/[cve, pagination]
-import ../helpers
+import ../helpers/app_helper
 import layout_view
 
 proc renderHero*(cve: Cve): HeroVNode =

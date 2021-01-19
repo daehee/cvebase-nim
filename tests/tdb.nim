@@ -17,6 +17,15 @@ suite "db tests":
   let uri = parseUri(connStr)
   let db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
 
+  test "parsePgDateTime":
+    let tStr = "2006-01-02T15:04Z"
+    let got = tStr.parsePgDateTime()
+    check $got.month() == "January"
+    check got.year() == 2006
+    check got.monthday() == 2
+    check got.hour() == 15
+    check got.minute() == 4
+
   test "getCveBySequence":
     block:
       let cve = waitFor db.getCveBySequence(2020, 14882)

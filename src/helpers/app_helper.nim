@@ -58,7 +58,7 @@ proc ago*(fromTime: DateTime): string =
 
   let min = dur.inMinutes
   if min < 45: return min.pluralize("minute") & " ago"
-  
+
   var hr = ceil(min.int / 60).int
   if min < dayMinutes: return "about " & hr.pluralize("hour") & " ago"
   if min < (42 * hr): return "1 day ago"

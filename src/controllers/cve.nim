@@ -2,11 +2,11 @@ import std/[strutils]
 
 import prologue
 
-import ../db/queries
-import ../models/[cve, pagination]
-import ../views/[layout_view, cve_view]
-
-import ../globals
+import
+  ../globals,
+  ../db/queries,
+  ../models/[cve, pagination],
+  ../views/[layout_view, cve_view]
 
 proc showCve*(ctx: Context) {.async.} =
   var year, seq: int

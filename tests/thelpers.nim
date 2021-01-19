@@ -2,7 +2,7 @@ import unittest
 
 import sequtils, times
 
-import helpers
+import helpers/app_helper
 
 suite "test helpers":
   test "peekCveLink":
