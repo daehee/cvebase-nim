@@ -1,4 +1,4 @@
-import std/[times, options, strformat]
+import std/[times, options, strformat, strtabs, json]
 
 import ../helpers/app_helper
 
@@ -13,6 +13,7 @@ type
     cvss3*: Option[Cvss3]
     pocs*: seq[Poc]
     cwe*: Option[Cwe]
+    wiki*: JsonNode
 
   Cvss3* = object
     score*: string

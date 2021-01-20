@@ -58,7 +58,7 @@ proc parseCwe(rows: seq[Row]): Cwe =
 const
   resultsPerPage = 10
 
-  cveBySequenceQuery = sql("select id, cve_id, year, sequence, published_date, data, cwe_id from cves where year = ? and sequence = ?")
+  cveBySequenceQuery = sql("select id, cve_id, year, sequence, published_date, data, wiki_data, cwe_id from cves where year = ? and sequence = ?")
 
   cvesByYearQuery = sql("""select id, cve_id, year, sequence, published_date, data from cves
     where extract(year from published_date) = ?
@@ -80,14 +80,16 @@ const
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let
     rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
-    id = rows[0][0] # actual row id; field idx 0
-    cweId = rows[0][6] # field idx 6
+    data = rows[0]
+    id = data[0]         # pk id; field idx 0
+    cweId = data[7]      # field idx 7
   # Build basic Cve object
-  result = parseCveRow(rows[0])
+  result = parseCveRow(data)
   # Relational queries for rest of fields
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
+  result.wiki = parseJson(data[6])
 
 #proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
 #  var param = cveId

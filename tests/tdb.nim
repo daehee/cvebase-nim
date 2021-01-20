@@ -1,5 +1,5 @@
 import unittest
-import std/[asyncdispatch, times, uri, strutils, options]
+import std/[asyncdispatch, times, uri, strutils, options, json]
 
 import models/[cve, pagination]
 import db/[pg, queries]
@@ -20,6 +20,16 @@ suite "db tests":
       check cve.refUrls.len() == 3
       check cve.cvss3.get().score == "9.8"
       check cve.cvss3.get().severity == "CRITICAL"
+      check len(cve.wiki["advisory"].getStr()) > 0
+
+  test "CVE Weakness":
+    block:
+      let cve = waitFor db.getCveBySequence(2020, 14882)
+      check cve.cwe.isNone()
+    block:
+      let cve = waitFor db.getCveBySequence(2020, 796)
+      check cve.cwe.get().name == "Improper Input Validation"
+      check cve.cwe.get().description.contains("The product receives input or data, but it does")
 
   test "CVE with reserved status":
     block:
