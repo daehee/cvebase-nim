@@ -1,5 +1,6 @@
 import std/[times, strformat, options, strtabs, strutils, json]
 import karax/[karaxdsl, vdom]
+import markdown
 
 import prologue/core/context
 
@@ -135,9 +136,12 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                 text &"Published: {fmtDate}"
             h3():
               text "Community Advisory"
-            p():
-              small(class="has-text-grey-light"):
-                text "This section is open source, for any additional information that enhances or clarifies the official advisory above. "
+            if cve.wiki.hasKey("advisory"):
+              verbatim markdown(cve.wiki["advisory"].getStr())
+            else:
+              p:
+                small(class="has-text-grey-light"):
+                  text "This section is open source, for any additional information that enhances or clarifies the official advisory above. "
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com"):
                 span(class="icon"):
