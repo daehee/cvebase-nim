@@ -15,8 +15,10 @@ proc showCve*(ctx: Context) {.async.} =
 
   let cve = await db.getCveBySequence(year, seq)
 
-  # TODO: Replace title
-  resp renderMain(ctx.renderCve(cve), renderHero(cve), "CVE")
+  ctx.ctxData["title"] = cve.titleTag
+#  ctx.ctxData["description"] = ""
+
+  resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve))
 
 proc showCveYear*(ctx: Context) {.async.} =
   var year: int
@@ -34,4 +36,4 @@ proc showCveYear*(ctx: Context) {.async.} =
   # TODO: Replace title
   # Set year in ctx using first cve item (prevent injection of variable in template)
   ctx.ctxData["year"] = $pgn.items[0].year
-  resp renderMain(ctx.renderCveYear(pgn), "CVE Year")
+  resp ctx.renderMain(ctx.renderCveYear(pgn))

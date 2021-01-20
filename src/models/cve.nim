@@ -1,4 +1,6 @@
-import std/[times, options]
+import std/[times, options, strformat]
+
+import ../helpers/app_helper
 
 type
   Cve* = object
@@ -28,3 +30,11 @@ type
   Vendor* = object
     name*: string
     products*: seq[Product]
+
+
+proc titleTag*(cve: Cve): string =
+  result = cve.cveId
+  let numPocs = len(cve.pocs)
+  if numPocs > 0:
+    let exploits = numPocs.pluralize("PoC Exploit")
+    result.add &" ({exploits} Available)"

@@ -1,4 +1,6 @@
-import karax/[karaxdsl, vdom, vstyles]
+import
+  karax/[karaxdsl, vdom, vstyles],
+  prologue
 
 type
   HeroVNode* = distinct VNode
@@ -6,10 +8,10 @@ type
 const
   doctype = "<!DOCTYPE html>\n"
 
-proc renderHead*(): VNode =
+proc renderHead*(ctx: Context): VNode =
   buildHtml(head):
     title:
-      text "replace me  title"
+      text ctx.ctxData.getOrDefault("title")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
     script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
@@ -107,9 +109,9 @@ proc renderFooter*(): VNode =
               a(href="https://creativecommons.org/licenses/by-nc-sa/4.0/"):
                 text "CC BY-NC-SA 4.0"
 
-proc renderMain*(body: VNode; titleText=""; desc=""): string =
+proc renderMain*(ctx: Context; body: VNode; titleText=""; desc=""): string =
   let node = buildHtml(html(lang="en")):
-    renderHead()
+    ctx.renderHead()
     body:
       renderNavBar()
       body
@@ -117,10 +119,10 @@ proc renderMain*(body: VNode; titleText=""; desc=""): string =
 
   result = doctype & $node
 
-proc renderMain*(body: VNode; hero: HeroVNode; titleText=""; desc=""): string =
+proc renderMain*(ctx: Context; body: VNode; hero: HeroVNode; titleText=""; desc=""): string =
   ## Overloaded with hero
   let node = buildHtml(html(lang="en")):
-    renderHead()
+    ctx.renderHead()
     body:
       renderNavBar()
       hero.VNode

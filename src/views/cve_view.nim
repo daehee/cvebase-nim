@@ -87,7 +87,8 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                 text cve.cwe.get().description
             p():
               small(class="has-text-grey-light"):
-                text "Published: 2021-01-12 "
+                let fmtDate = cve.pubDate.format("yyyy-MM-dd")
+                text &"Published: {fmtDate}"
             h3():
               text "Community Advisory"
             p():

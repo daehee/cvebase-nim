@@ -45,7 +45,7 @@ const
   yearMinutes = dayMinutes * 365
   quarterMinutes = yearMinutes / 4
 
-proc pluralize(i: int64, s: string): string =
+proc pluralize*(i: int64, s: string): string =
   result = &"{i} {s}"
   if i != 1: result.add "s"
 
