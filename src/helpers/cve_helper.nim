@@ -16,4 +16,5 @@ proc renderCveLabButtons*(labsJson: seq[JsonNode]): VNode =
         span(class = "icon"):
           italic(class = "fas fa-flask")
         span:
+          # TODO: Stack as numbered collection when duplicate vendors e.g. Vulhub 1, Vulhub 2
           text urlToLabVendor(url)
