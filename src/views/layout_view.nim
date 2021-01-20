@@ -2,6 +2,8 @@ import
   karax/[karaxdsl, vdom, vstyles],
   prologue
 
+import ../models/pagination
+
 type
   HeroVNode* = distinct VNode
 
@@ -136,3 +138,13 @@ proc renderError*(error: string): VNode =
   buildHtml(tdiv(class="panel-container")):
     tdiv(class="error-panel"):
       span: verbatim error
+
+proc renderPagination*(ctx: Context, pgn: Pagination, route: string, params: openArray[(string, string)]): VNode =
+  buildHtml():
+    nav(class = "pagination"):
+      if pgn.hasPrev:
+        a(class = "pagination-previous", href = ctx.urlFor(route, params, {"page": $pgn.prevNum})):
+          text "Previous"
+      if pgn.hasNext:
+        a(class = "pagination-next", href = ctx.urlFor(route, params, {"page": $pgn.nextNum})):
+          text "Next page"

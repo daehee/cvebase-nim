@@ -181,13 +181,7 @@ proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
               for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
-            nav(class = "pagination"):
-              if pgn.hasPrev:
-                a(class = "pagination-previous", href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")}, {"page": $pgn.prevNum})):
-                  text "Previous"
-              if pgn.hasNext:
-                a(class = "pagination-next", href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")}, {"page": $pgn.nextNum})):
-                  text "Next page"
+            ctx.renderPagination(pgn, "cveYear", {"year": ctx.ctxData.getOrDefault("year")})
           tdiv(class="column is-2"):
             aside(class="menu"):
               p(class="menu-label"):
@@ -215,13 +209,7 @@ proc renderCveMonth*(ctx: Context, pgn: Pagination): VNode =
               for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
-            nav(class = "pagination"):
-              if pgn.hasPrev:
-                a(class = "pagination-previous", href = ctx.urlFor("cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")}, {"page": $pgn.prevNum})):
-                  text "Previous"
-              if pgn.hasNext:
-                a(class = "pagination-next", href = ctx.urlFor("cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")}, {"page": $pgn.nextNum})):
-                  text "Next page"
+            ctx.renderPagination(pgn, "cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")})
           tdiv(class="column is-2"):
             aside(class="menu"):
               p(class="menu-label"):
