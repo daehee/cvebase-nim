@@ -41,9 +41,9 @@ proc parseCveRow(row: Row): Cve {.inline.} =
       ).some()
   else:
     let fmtDate = result.pubDate.format("MMM d, yyyy")
-    result.description = &"""{result.cveId} is reserved and pending public disclosure since {fmtDate}.
-When the official advisory for {result.cveId} is released, details such as weakness type and vulnerability scoring
-will be provided here."""
+    result.description = (&"""{result.cveId} is reserved and pending public disclosure since {fmtDate}.
+      When the official advisory for {result.cveId} is released, details such as weakness type and vulnerability scoring
+      will be provided here.""").unindent.replace("\n", " ")
 
 
 proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
