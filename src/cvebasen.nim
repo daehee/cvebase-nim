@@ -51,6 +51,7 @@ var app = newApp(settings = settings, startup = @[loggerEvent])
 
 let
   cveRoutes* = @[
+    pattern("/{year}/m/{month}", showCveMonth, @[HttpGet], "cveMonth"),
     pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
   ]

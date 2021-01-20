@@ -1,4 +1,4 @@
-import std/[strutils, strformat]
+import std/[strutils, strformat, times]
 
 import prologue
 
@@ -42,3 +42,30 @@ proc showCveYear*(ctx: Context) {.async.} =
   ctx.ctxData["description"] = &"Browse the top 100 CVE vulnerabilities of {yearStr} by PoC exploits available."
 
   resp ctx.renderMain(ctx.renderCveYear(pgn))
+
+proc showCveMonth*(ctx: Context) {.async.} =
+  var year, month: int
+  year = parseInt(ctx.getPathParams("year"))
+  month = parseInt(ctx.getPathParams("month"))
+  let pageParam = ctx.getQueryParams("page")
+  var pgn: Pagination[Cve]
+  if pageParam != "":
+    let pageNum = parseInt(pageParam)
+    pgn = await db.getCvesByMonth(year, month, pageNum)
+  else:
+    pgn = await db.getCvesByMonth(year, month)
+  if len(pgn.items) == 0:
+    respDefault Http404
+    return
+
+  # Set year in ctx using first cve item (prevent injection of variable in template)
+  let
+    aCve = pgn.items[0]
+    yearStr = $aCve.pubDate.year
+    monthStr = $aCve.pubDate.month.ord()
+  ctx.ctxData["year"] = yearStr
+  ctx.ctxData["month"] = monthStr
+  ctx.ctxData["title"] = &"CVEs Published in {monthStr} {yearStr}"
+  ctx.ctxData["description"] = &"Browse CVE vulnerabilities published in {monthStr} {yearStr}."
+
+  resp ctx.renderMain(ctx.renderCveMonth(pgn))

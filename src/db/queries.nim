@@ -8,9 +8,11 @@ import ../models/[cve, pagination]
 #  let layout = "yyyy-MM-dd'T'HH:mm'Z'"
 #  s.parse(layout, utc())
 
+const pgDateLayout = "yyyy-MM-dd HH:mm:ss"
+
 proc parsePgDateTime*(s: string): DateTime =
   # Example: "2006-01-02 15:15:00"
-  let layout = "yyyy-MM-dd HH:mm:ss"
+  let layout = pgDateLayout
   s.parse(layout, utc())
 
 ## Cve
@@ -57,12 +59,21 @@ const
   resultsPerPage = 10
 
   cveBySequenceQuery = sql("select id, cve_id, year, sequence, published_date, data, cwe_id from cves where year = ? and sequence = ?")
+
   cvesByYearQuery = sql("""select id, cve_id, year, sequence, published_date, data from cves
     where extract(year from published_date) = ?
     order by cve_pocs_count
     desc nulls last
     limit 10 offset ?""".unindent)
   cvesByYearCountQuery = sql("select count(*) from cves where extract(year from published_date) = ?")
+
+  # Cve.where(published_date: d.beginning_of_month.beginning_of_day..d.end_of_month.end_of_day).order('published_date DESC')
+  cvesByMonthQuery= sql("""select id, cve_id, year, sequence, published_date, data from cves
+    where published_date between ? and ?
+    order by published_date desc
+    limit 10 offset ?""".unindent)
+  cvesByMonthCountQuery = sql("select count(*) from cves where published_date between ? and ?")
+
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
   cveCweQuery = sql("select name, description from cwes where id = ?")
 
@@ -95,5 +106,20 @@ proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[
   let rows = await db.rows(cvesByYearQuery, @[$year, $offset])
   # TODO: Change to "seek" technique to reduce to single query without offset
   result = newPagination[Cve](cvesByYearQuery, page, resultsPerPage, count, newSeq[Cve]())
+  for item in rows:
+    result.items.add parseCveRow(item)
+
+proc getCvesByMonth*(db: AsyncPool; year: int, month: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
+  let monthDate = initDateTime(01, Month(month), year, 00, 00, 00, utc())
+  let lastDayOfMonth = monthDate.month.getDaysInMonth(year)
+  let monthEndDate = initDateTime(MonthdayRange(lastDayOfMonth), Month(month), year, 23, 59, 59, utc())
+
+  let beginTime = monthDate.format(pgDateLayout) # 2020-12-01 00:00:00
+  let endTime = monthEndDate.format(pgDateLayout) # 2020-12-31 23:59:59.999999
+
+  paginateQuery(cvesByMonthCountQuery, @[beginTime, endTime], page)
+  let rows = await db.rows(cvesByMonthQuery, @[beginTime, endTime, $offset])
+  # TODO: Change to "seek" technique to reduce to single query without offset
+  result = newPagination[Cve](cvesByMonthQuery, page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)

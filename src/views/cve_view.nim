@@ -203,3 +203,37 @@ proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
                     li():
                       a(href="/cve/1996/m/2"):
                         text "February"
+
+proc renderCveMonth*(ctx: Context, pgn: Pagination): VNode =
+  buildHtml():
+    section(class="section"):
+      tdiv(class="container is-widescreen"):
+        tdiv(class="columns"):
+          tdiv(class="column"):
+#            ctx.renderCveYearBreadcrumbs()
+            tdiv(class="columns is-multiline"):
+              for cve in pgn.items:
+                ctx.renderCveCard(cve)
+            hr()
+            nav(class = "pagination"):
+              if pgn.hasPrev:
+                a(class = "pagination-previous", href = ctx.urlFor("cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")}, {"page": $pgn.prevNum})):
+                  text "Previous"
+              if pgn.hasNext:
+                a(class = "pagination-next", href = ctx.urlFor("cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")}, {"page": $pgn.nextNum})):
+                  text "Next page"
+          tdiv(class="column is-2"):
+            aside(class="menu"):
+              p(class="menu-label"):
+                text "Browse By Date "
+              ul(class="menu-list"):
+                li():
+                  a(class="",href="/cve/2021"):
+                    text "2021"
+                  ul():
+                    li():
+                      a(href="/cve/1996/m/4"):
+                        text "April"
+                    li():
+                      a(href="/cve/1996/m/2"):
+                        text "February"

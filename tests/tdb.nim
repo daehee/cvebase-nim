@@ -38,4 +38,16 @@ suite "db tests":
       check pgn.hasNext == true
       check pgn.hasPrev == false
 
+  test "getCvesByMonth":
+    block:
+      let pgn = waitFor db.getCvesByMonth(2020, 8)
+      check pgn.page == 1
+      check pgn.perPage == 10
+      check pgn.total > 0
+      check pgn.pages > 0
+      check pgn.nextNum == 2
+      check pgn.prevNum == 0
+      check pgn.hasNext == true
+      check pgn.hasPrev == false
+
   waitFor db.close()
