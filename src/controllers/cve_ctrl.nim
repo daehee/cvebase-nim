@@ -19,7 +19,7 @@ proc showCve*(ctx: Context) {.async.} =
   ctx.ctxData["title"] = cve.titleTag
   ctx.ctxData["description"] = cve.description.truncate(160)
 
-  resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve))
+  resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve.cveId))
 
 proc showCveYear*(ctx: Context) {.async.} =
   var year: int
@@ -41,7 +41,7 @@ proc showCveYear*(ctx: Context) {.async.} =
   ctx.ctxData["title"] = &"CVEs Published in {yearStr}"
   ctx.ctxData["description"] = &"Browse the top 100 CVE vulnerabilities of {yearStr} by PoC exploits available."
 
-  resp ctx.renderMain(ctx.renderCveYear(pgn))
+  resp ctx.renderMain(ctx.renderCveYear(pgn), renderHero(&"Most Exploitable CVEs of {yearStr}"))
 
 proc showCveMonth*(ctx: Context) {.async.} =
   var year, month: int
@@ -62,10 +62,11 @@ proc showCveMonth*(ctx: Context) {.async.} =
   let
     aCve = pgn.items[0]
     yearStr = $aCve.pubDate.year
-    monthStr = $aCve.pubDate.month.ord()
+    monthNum = $aCve.pubDate.month.ord
+    monthStr = $parseInt(monthNum).Month
   ctx.ctxData["year"] = yearStr
-  ctx.ctxData["month"] = monthStr
+  ctx.ctxData["month"] = monthNum
   ctx.ctxData["title"] = &"CVEs Published in {monthStr} {yearStr}"
   ctx.ctxData["description"] = &"Browse CVE vulnerabilities published in {monthStr} {yearStr}."
 
-  resp ctx.renderMain(ctx.renderCveMonth(pgn))
+  resp ctx.renderMain(ctx.renderCveMonth(pgn), renderHero(&"CVEs Published in {monthStr} {yearStr}"))
