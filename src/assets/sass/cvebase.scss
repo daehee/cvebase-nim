@@ -77,20 +77,37 @@
   }
 }
 
-.tag.is-severity-low {
-  background-color: #3298dc;
+$severity-colors: ("low": (#3298dc, #fff), "medium": (#ffdd57, $grey-dark), "high": (#ff7518, #fff), "critical": (#ff2e12, #fff));
+
+.tag:not(body) {
+  color: $text;
+  @each $name, $pair in $severity-colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+    &.is-severity-#{$name} {
+      color: $color-invert;
+      background-color: $color;
+    }
+  }
 }
 
-.tag.is-severity-medium {
-  background-color: #ffdd57;
-  color: $grey-dark;
+.progress {
+  //$progress-bar-background-color: $border-light !default
+  @each $name, $pair in $severity-colors {
+    $color: nth($pair, 1);
+    &.is-severity-#{$name} {
+      &::-webkit-progress-value {
+        background-color: $color;
+      }
+      &::-moz-progress-bar {
+        background-color: $color;
+      }
+      &::-ms-fill {
+        background-color: $color;
+      }
+      &:indeterminate {
+        background-image: linear-gradient(to right, $color 30%, $progress-bar-background-color 30%);
+      }
+    }
+  }
 }
-
-.tag.is-severity-high {
-  background-color: #ff7518;
-}
-
-.tag.is-severity-critical {
-  background-color: #ff2e12;
-}
-

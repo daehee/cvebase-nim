@@ -94,6 +94,14 @@ proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
           a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
             text $monthDate
 
+proc severityColorClass(severity: string): string {.inline.} =
+  result = case severity:
+  of "LOW": "is-severity-low"
+  of "MEDIUM": "is-severity-medium"
+  of "HIGH": "is-severity-high"
+  of "CRITICAL": "is-severity-critical"
+  else: "is-dark"
+
 proc renderCve*(ctx: Context, cve: Cve): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
@@ -102,16 +110,18 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
           ctx.renderCveDateBreadcrumbs(cve)
           tdiv(class="content",id="description"):
             if cve.cvss3.isSome():
+              let cvss3 = cve.cvss3.get()
+              let colorClass = severityColorClass(cvss3.severity)
               tdiv(class="columns is-vcentered is-mobile"):
                 tdiv(class="column is-three-fifths-touch is-one-third-widescreen"):
-                  progress(max="10",class="progress is-small is-danger",value = $cve.cvss3.get().score):
-                    text $cve.cvss3.get().score
+                  progress(max="10",class = &"progress is-small {colorClass}", value = cvss3.score):
+                    text cvss3.score
                 tdiv(class="column"):
                   span(class="is-size-5 has-text-weight-bold"):
-                    text &"{cve.cvss3.get().score} / 10"
+                    text &"{cvss3.score} / 10"
                   br()
                   span(class="is-size-7 has-text-weight-semibold"):
-                    text cve.cvss3.get().severity
+                    text cvss3.severity
             p():
               text cve.description
             if cve.cwe.isSome():
@@ -166,14 +176,6 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                       span(class="icon has-text-grey-light is-size-6"):
                         italic(class="fas fa-external-link-square-alt")
         renderSidebar(cve)
-
-proc severityColorClass(severity: string): string {.inline.} =
-  result = case severity:
-  of "LOW": "is-severity-low"
-  of "MEDIUM": "is-severity-medium"
-  of "HIGH": "is-severity-high"
-  of "CRITICAL": "is-severity-critical"
-  else: "is-dark"
 
 proc renderCvssTag(cvss3: Cvss3): VNode =
   let colorClass = severityColorClass(cvss3.severity)
