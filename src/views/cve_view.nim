@@ -1,4 +1,4 @@
-import std/[times, strformat, options, strtabs]
+import std/[times, strformat, options, strtabs, strutils]
 import karax/[karaxdsl, vdom]
 
 import prologue/core/context
@@ -44,28 +44,62 @@ proc renderSidebar(cve: Cve): VNode =
           a(href = "REPLACEME"):
             text &"{$cve.pubDate.month()} {$cve.pubDate.year()} CVEs"
 
-proc renderBreadCrumbs(ctx: Context, cve: Cve): VNode =
-  buildHtml(nav(class="breadcrumb")):
-    ul():
-      li():
-        a(href = "/cve"):
-          text "CVE"
-      li():
-        a(href = ctx.urlFor("cveYear", {"year": $cve.year})):
-          text $cve.pubDate.year()
-      li():
-        a(href = "REPLACEME"):
-          text $cve.pubDate.month()
-      li(class="is-active"):
-        a(href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
-          text cve.cveId
+proc renderCveDateBreadcrumbs(ctx: Context, cve: Cve): VNode =
+  ## cve
+  let
+    cvePubYear = $cve.pubDate.year
+    cvePubMonth = $cve.pubDate.month
+    cvePubMonthNum = $cve.pubDate.month.ord()
+  buildHtml():
+    nav(class="breadcrumb"):
+      ul():
+        li():
+          a(href = "/cve"):
+            text "CVE"
+        li():
+          a(href = ctx.urlFor("cveYear", {"year": cvePubYear})):
+            text cvePubYear
+        li():
+          a(href = ctx.urlFor("cveMonth", {"year": cvePubYear, "month": cvePubMonthNum})):
+            text cvePubMonth
+        li(class="is-active"):
+          a(href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+            text cve.cveId
+
+proc renderCveDateBreadcrumbs(ctx: Context; year: string): VNode =
+  ## cveYear
+  buildHtml():
+    nav(class="breadcrumb"):
+      ul():
+        li():
+          a(href = "/cve"):
+            text "CVE"
+        li():
+          a(href = ctx.urlFor("cveYear", {"year": year})):
+            text year
+
+proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
+  ## cveMonth
+  let monthDate = parseInt(month).Month
+  buildHtml():
+    nav(class="breadcrumb"):
+      ul():
+        li():
+          a(href = "/cve"):
+            text "CVE"
+        li():
+          a(href = ctx.urlFor("cveYear", {"year": year})):
+            text year
+        li():
+          a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
+            text $monthDate
 
 proc renderCve*(ctx: Context, cve: Cve): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
         tdiv(class="column"):
-          ctx.renderBreadcrumbs(cve)
+          ctx.renderCveDateBreadcrumbs(cve)
           tdiv(class="content",id="description"):
             if cve.cvss3.isSome():
               tdiv(class="columns is-vcentered is-mobile"):
@@ -133,17 +167,6 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                         italic(class="fas fa-external-link-square-alt")
         renderSidebar(cve)
 
-proc renderCveYearBreadcrumbs(ctx: Context): VNode =
-  buildHtml():
-    nav(class="breadcrumb"):
-      ul():
-        li():
-          a(href="/cve"):
-            text "CVE"
-        li(class="is-active"):
-          a(href = ctx.urlFor("cveYear", {"year": ctx.ctxData.getOrDefault("year")})):
-            text ctx.getPathParams("year")
-
 proc renderCveCard(ctx: Context, cve:Cve): VNode =
   buildHtml():
     tdiv(class="column is-half"):
@@ -171,17 +194,18 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
           # TODO: PoC exploits available
 
 proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
+  let year = ctx.ctxData.getOrDefault("year")
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
-            ctx.renderCveYearBreadcrumbs()
+            ctx.renderCveDateBreadcrumbs(year)
             tdiv(class="columns is-multiline"):
               for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
-            ctx.renderPagination(pgn, "cveYear", {"year": ctx.ctxData.getOrDefault("year")})
+            ctx.renderPagination(pgn, "cveYear", {"year": year})
           tdiv(class="column is-2"):
             aside(class="menu"):
               p(class="menu-label"):
@@ -199,17 +223,20 @@ proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
                         text "February"
 
 proc renderCveMonth*(ctx: Context, pgn: Pagination): VNode =
+  let
+    year = ctx.ctxData.getOrDefault("year")
+    month = ctx.ctxData.getOrDefault("month")
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
-#            ctx.renderCveYearBreadcrumbs()
+            ctx.renderCveDateBreadcrumbs(year, month)
             tdiv(class="columns is-multiline"):
               for cve in pgn.items:
                 ctx.renderCveCard(cve)
             hr()
-            ctx.renderPagination(pgn, "cveMonth", {"year": ctx.ctxData.getOrDefault("year"), "month": ctx.ctxData.getOrDefault("month")})
+            ctx.renderPagination(pgn, "cveMonth", {"year": year, "month": month})
           tdiv(class="column is-2"):
             aside(class="menu"):
               p(class="menu-label"):
