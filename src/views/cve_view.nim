@@ -167,18 +167,33 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                         italic(class="fas fa-external-link-square-alt")
         renderSidebar(cve)
 
+proc severityColorClass(severity: string): string {.inline.} =
+  result = case severity:
+  of "LOW": "is-severity-low"
+  of "MEDIUM": "is-severity-medium"
+  of "HIGH": "is-severity-high"
+  of "CRITICAL": "is-severity-critical"
+  else: "is-dark"
+
+proc renderCvssTag(cvss3: Cvss3): VNode =
+  let colorClass = severityColorClass(cvss3.severity)
+  buildHtml():
+    tdiv(class="card-header-icon"):
+      tdiv(class="tags"):
+        span(class = &"tag {colorClass}"):
+          text cvss3.score
+
 proc renderCveCard(ctx: Context, cve:Cve): VNode =
+  let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
   buildHtml():
     tdiv(class="column is-half"):
       tdiv(class="card"):
         header(class="card-header"):
           p(class="card-header-title"):
-            a(class = "has-text-primary-light is-size-5", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+            a(class = "has-text-primary-light is-size-5", href = linkToCve):
               text cve.cveId
-          tdiv(class="card-header-icon"):
-            tdiv(class="tags"):
-              span(class="tag is-dark"):
-                text "N/A"
+          if cve.cvss3.isSome():
+            renderCvssTag(cve.cvss3.get())
         tdiv(class="card-content has-background-black"):
           p():
             text truncate(cve.description, 180)
@@ -188,7 +203,7 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
         footer(class="card-footer"):
           p(class="card-footer-item"):
             span(class="is-size-7"):
-              a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+              a(class = "has-text-white", href = linkToCve):
                 text "show details"
           p(class="card-footer-item")
           # TODO: PoC exploits available
