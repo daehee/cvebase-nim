@@ -78,4 +78,3 @@ proc ago*(fromTime: DateTime): string =
   if rem < (9 * monthMinutes): return "over " & yr.pluralize("year") & " ago"
   yr.inc
   "almost " & yr.pluralize("year") & " ago"
-

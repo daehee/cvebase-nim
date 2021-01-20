@@ -1,10 +1,10 @@
-import std/[times, strformat, options, strtabs, strutils]
+import std/[times, strformat, options, strtabs, strutils, json]
 import karax/[karaxdsl, vdom]
 
 import prologue/core/context
 
 import ../models/[cve, pagination]
-import ../helpers/app_helper
+import ../helpers/[app_helper, cve_helper]
 import layout_view
 
 proc renderHero*(title: string): HeroVNode =
@@ -163,6 +163,11 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                   italic(class="fab fa-github")
                 span():
                   text "Add PoC"
+            if cve.wiki.hasKey("courses"):
+              h3():
+                text "Research Labs"
+              renderCveLabButtons(cve.wiki["courses"].getElems())
+
             h3():
               text "Official References"
             details():
