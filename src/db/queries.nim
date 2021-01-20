@@ -1,4 +1,4 @@
-import std/[asyncdispatch, json, tables, times, strutils, options, strformat]
+import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils]
 
 import ./pg
 import ../models/[cve, pagination]
@@ -16,33 +16,35 @@ proc parsePgDateTime*(s: string): DateTime =
 ## Cve
 
 proc parseCveRow(row: Row): Cve {.inline.} =
-  var
-    refUrls: seq[string] = @[]
-    description: string
+#  var
+#    refUrls: seq[string] = @[]
+#    description: string
 
-  let
-    cveId = row[1]
-    cveData = row[5]
-    pubDate = parsePgDateTime(row[4])
+  result.cveId = row[1]
+  result.year = parseInt(row[2])
+  result.sequence = parseInt(row[3])
+  result.pubDate = parsePgDateTime(row[4])
+
+  let cveData = row[5]
   if cveData != "":
     let cveDataJson = parseJson(cveData)
-    description = cveDataJson["cve"]["description"]["description_data"][0]["value"].getStr()
+    result.description = cveDataJson["cve"]["description"]["description_data"][0]["value"].getStr()
     for item in cveDataJson["cve"]["references"]["reference_data"]:
-      refUrls.add(item["url"].getStr())
+      result.refUrls.add(item["url"].getStr())
+
+    # CVSS data if exists
+    let score = cveDataJson["impact"]["baseMetricV3"]["cvssV3"]["baseScore"].getFloat()
+    if score > 0:
+      result.cvss3 = Cvss3(
+        score: if score == 10: "10" else: $score.formatFloat(ffDecimal, 1),
+        severity: cveDataJson["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"].getStr()
+      ).some()
   else:
-    let fmtDate = pubDate.format("MMM d, yyyy")
-    description = &"""{cveId} is reserved and pending public disclosure since {fmtDate}.
-When the official advisory for {cveId} is released, details such as weakness type and vulnerability scoring
+    let fmtDate = result.pubDate.format("MMM d, yyyy")
+    result.description = &"""{result.cveId} is reserved and pending public disclosure since {fmtDate}.
+When the official advisory for {result.cveId} is released, details such as weakness type and vulnerability scoring
 will be provided here."""
 
-  Cve(
-    cveId: cveId,
-    year: parseInt(row[2]),
-    sequence: parseInt(row[3]),
-    description: description,
-    refUrls: refUrls,
-    pubDate: pubDate,
-  )
 
 proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
   for row in rows:

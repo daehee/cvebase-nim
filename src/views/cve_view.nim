@@ -67,17 +67,17 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
         tdiv(class="column"):
           ctx.renderBreadcrumbs(cve)
           tdiv(class="content",id="description"):
-            tdiv(class="columns is-vcentered is-mobile"):
-              tdiv(class="column is-three-fifths-touch is-one-third-widescreen"):
-                progress(max="10",class="progress is-small is-danger",value="8.1"):
-                  # TODO Add
-                  text "8.1%"
-              tdiv(class="column"):
-                span(class="is-size-5 has-text-weight-bold"):
-                  text "8.1 / 10"
-                br()
-                span(class="is-size-7 has-text-weight-semibold"):
-                  text "HIGH"
+            if cve.cvss3.isSome():
+              tdiv(class="columns is-vcentered is-mobile"):
+                tdiv(class="column is-three-fifths-touch is-one-third-widescreen"):
+                  progress(max="10",class="progress is-small is-danger",value = $cve.cvss3.get().score):
+                    text $cve.cvss3.get().score
+                tdiv(class="column"):
+                  span(class="is-size-5 has-text-weight-bold"):
+                    text &"{cve.cvss3.get().score} / 10"
+                  br()
+                  span(class="is-size-7 has-text-weight-semibold"):
+                    text cve.cvss3.get().severity
             p():
               text cve.description
             if cve.cwe.isSome():

@@ -10,9 +10,13 @@ type
     description*: string
     pubDate*: DateTime
     refUrls*: seq[string]
-    cvss3*: float
+    cvss3*: Option[Cvss3]
     pocs*: seq[Poc]
     cwe*: Option[Cwe]
+
+  Cvss3* = object
+    score*: string
+    severity*: string
 
   Cwe* = object
     name*: string
