@@ -13,6 +13,7 @@ proc renderHead*(ctx: Context): VNode =
     title:
       text ctx.ctxData.getOrDefault("title")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name = "description", content = ctx.ctxData.getOrDefault("description"))
     link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
     script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
     # TODO add canonical
