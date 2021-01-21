@@ -215,22 +215,28 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
           p(class="card-footer-item")
           # TODO: PoC exploits available
 
-proc renderCveDateSidebar(ctx: Context; year: string; allYears, yearMonths: seq[int]): VNode =
+proc renderCveDateSidebar(ctx: Context; selected: tuple[year, monthNum: string]; allYears, yearMonths: seq[int]): VNode =
   buildHtml():
     aside(class="menu"):
       p(class="menu-label"):
         text "Browse By Date "
       ul(class="menu-list"):
         for y in allYears:
+          let yStr = $y
           li:
-            if $y == year:
-              a(class = "is-active", href = ctx.urlFor("cveYear", {"year": $y})):
-                text $y
+            if yStr == selected.year:
+              a(class = "is-active", href = ctx.urlFor("cveYear", {"year": yStr})):
+                text yStr
               ul:
                 for m in yearMonths:
+                  let mStr = $m
                   li:
-                    a(href = ctx.urlFor("cveMonth", {"year": $y, "month": $m})):
-                      text $Month(m)
+                    if mStr == selected.monthNum:
+                      a(class = "is-active", href = ctx.urlFor("cveMonth", {"year": yStr, "month": mStr})):
+                        text $Month(m)
+                    else:
+                      a(href = ctx.urlFor("cveMonth", {"year": $y, "month": mStr})):
+                        text $Month(m)
             else:
               a(href = ctx.urlFor("cveYear", {"year": $y})):
                 text $y
@@ -249,12 +255,13 @@ proc renderCveYear*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[int
             hr()
             ctx.renderPagination(pgn, "cveYear", {"year": year})
           tdiv(class="column is-2"):
-            ctx.renderCveDateSidebar(year, allYears, yearMonths)
+            ctx.renderCveDateSidebar((year: year, monthNum: ""), allYears, yearMonths)
 
 proc renderCveMonth*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[int]): VNode =
   let
     year = ctx.ctxData.getOrDefault("year")
     month = ctx.ctxData.getOrDefault("month")
+    monthNum = Month(parseInt(month)).ord()
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
@@ -267,4 +274,4 @@ proc renderCveMonth*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[in
             hr()
             ctx.renderPagination(pgn, "cveMonth", {"year": year, "month": month})
           tdiv(class="column is-2"):
-            ctx.renderCveDateSidebar(year, allYears, yearMonths)
+            ctx.renderCveDateSidebar((year: year, monthNum: $monthNum), allYears, yearMonths)
