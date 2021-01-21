@@ -1,31 +1,46 @@
 ## Common and reusable code for views
 import uri, strutils, times, strformat, math
 
-proc peekCveLink*(url: string): string =
-  var parsed = parseUri(url)
 
-  # Strip www if exists
-  if parsed.hostname.startsWith("www"):
-    parsed.hostname.removePrefix("www.")
+proc peekOutlink*(url: string): string =
+  let parsed = parseUri(url)
+  var host = parsed.hostname
 
-  # TODO case switch: process domain specific
-  #[
-if host =~ /github\.com|githubusercontent\.com/
-  return raw "<span class=\"icon\"><i class=\"fab fa-github\"></i></span> #{stitch_repo_file(uri.path)}"
-elsif  host =~ /gitlab.com/
-  return raw "<span class=\"icon\"><i class=\"fab fa-gitlab\"></i></span> #{stitch_repo_file(uri.path)}"
-elsif host =~ /exploit-db.com/
-  return raw "<span class=\"icon\"><i class=\"fas fa-spider\"></i></span> #{uri.path.split('/')[2]}"
-elsif host =~ /twitter.com/
-  return raw "<span class=\"icon\"><i class=\"fab fa-twitter\"></i></span> tweet by @#{uri.path.split('/')[1]}"
-elsif host =~ /youtube.com/
-  return raw "<span class=\"icon\"><i class=\"fab fa-youtube\"></i></span> watch video"
-elsif host =~ /medium.com/
-  return raw "<span class=\"icon\"><i class=\"fab fa-medium-m\"></i></span> #{uri.path[1..-1]}"
-end
-  ]#
+  # Strip subdomain if exists
+  var splitHost = host.split('.')
+  if len(splitHost) > 2: splitHost.delete(0)
+  host = splitHost.join(".")
 
-  return parsed.hostname & parsed.path
+#  if host.startsWith("www"):
+#    host.removePrefix("www.")
+
+  case host:
+  of "github.com":
+    result.add """<span class="icon"><i class="fab fa-github"></i></span> """
+    result.add parsed.path.strip(chars = {'/'})
+  of "githubusercontent.com":
+    result.add """<span class="icon"><i class="fab fa-github"></i></span> """
+    var split = parsed.path.split('/')
+    split.delete(3)
+    result.add split.join("/").strip(chars = {'/'})
+  of "gitlab.com":
+    result.add """<span class="icon"><i class="fab fa-gitlab"></i></span> """
+    result.add parsed.path.strip(chars = {'/'})
+  of "exploit-db.com":
+    result.add """<span class="icon"><i class="fas fa-spider"></i></span> """
+    result.add parsed.path.split('/')[2]
+  of "twitter.com":
+    result.add """<span class="icon"><i class="fab fa-twitter"></i></span> """
+    result.add "tweet by " & parsed.path.split('/')[1]
+  of "youtube.com":
+    result.add """<span class="icon"><i class="fab fa-youtube"></i></span> """
+    result.add "watch video"
+  of "medium.com":
+    result.add """<span class="icon"><i class="fab fa-medium"></i></span> """
+    result.add parsed.path.strip(chars = {'/'})
+  else:
+    result.add host & parsed.path
+
 
 proc truncate*(s: string, truncAt: int): string =
   ## Truncates a given text after a given length if text is longer than length

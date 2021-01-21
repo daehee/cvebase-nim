@@ -1,4 +1,4 @@
-import std/[times, strformat, options, strtabs, strutils, json]
+import std/[times, strformat, options, strtabs, strutils, json, sequtils]
 import karax/[karaxdsl, vdom]
 import markdown
 
@@ -151,10 +151,10 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                 let numPocs = len(cve.pocs)
                 text &"View list ({numPocs})"
               ul(id="pocs"):
-                for item in cve.pocs:
-                  li():
-                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=item.url):
-                      text peekCveLink(item.url)
+                for url in cve.pocs.map(proc(x: Poc): string = x.url):
+                  li:
+                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
+                      verbatim peekOutlink(url)
                       span(class="icon has-text-grey-light is-size-6"):
                         italic(class="fas fa-external-link-square-alt")
             p():
@@ -174,10 +174,10 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
               summary():
                 text "View list"
               ul(id="references"):
-                for item in cve.refUrls:
-                  li():
-                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=item):
-                      text peekCveLink(item)
+                for url in cve.refUrls:
+                  li:
+                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
+                      verbatim peekOutlink(url)
                       span(class="icon has-text-grey-light is-size-6"):
                         italic(class="fas fa-external-link-square-alt")
         ctx.renderSidebar(cve)
