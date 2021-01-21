@@ -27,18 +27,16 @@ proc renderSidebar(ctx: Context, cve: Cve): VNode =
         text &"{cve.cveId} Dorks"
       ul(class="menu-list"):
         li():
-          a(target="_blank",rel="nofollow",href = &"https://twitter.com/search?q=%22{cve.cveId}%22"):
-            span(class="icon"):
-              italic(class="fas fa-search")
-            text "Twitter "
-          a(target="_blank",rel="nofollow",href = &"https://www.google.com/search?q={cve.cveId}"):
-            span(class="icon"):
-              italic(class="fas fa-search")
-            text "Google "
-          a(target="_blank",rel="nofollow",href = &"https://www.youtube.com/results?search_query={cve.cveId}"):
-            span(class="icon"):
-              italic(class="fas fa-search")
-            text "YouTube "
+          let links = @[
+            ("Twitter", &"https://twitter.com/search?q=%22{cve.cveId}%22"),
+            ("Google", &"https://www.google.com/search?q={cve.cveId}"),
+            ("YouTube", &"https://www.youtube.com/results?search_query={cve.cveId}"),
+          ]
+          for link in links:
+            a(target="_blank",rel="nofollow",href = link[1]):
+              span(class="icon"):
+                italic(class="fas fa-search")
+              text link[0]
       p(class="menu-label"):
         text "Related Vulnerabilities "
       ul(class="menu-list"):
