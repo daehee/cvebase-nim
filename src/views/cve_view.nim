@@ -215,7 +215,24 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
           p(class="card-footer-item")
           # TODO: PoC exploits available
 
-proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
+proc renderCveDateSidebar(ctx: Context; year: string; allYears, yearMonths: seq[int]): VNode =
+  buildHtml():
+    aside(class="menu"):
+      p(class="menu-label"):
+        text "Browse By Date "
+      ul(class="menu-list"):
+        for y in allYears:
+          li:
+            a(href = ctx.urlFor("cveYear", {"year": $y})):
+              text $y
+            if $y == year:
+              ul:
+                for m in yearMonths:
+                  li:
+                    a(href = ctx.urlFor("cveMonth", {"year": $y, "month": $m})):
+                      text $Month(m)
+
+proc renderCveYear*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[int]): VNode =
   let year = ctx.ctxData.getOrDefault("year")
   buildHtml():
     section(class="section"):
@@ -229,22 +246,9 @@ proc renderCveYear*(ctx: Context, pgn: Pagination): VNode =
             hr()
             ctx.renderPagination(pgn, "cveYear", {"year": year})
           tdiv(class="column is-2"):
-            aside(class="menu"):
-              p(class="menu-label"):
-                text "Browse By Date "
-              ul(class="menu-list"):
-                li():
-                  a(class="",href="/cve/2021"):
-                    text "2021"
-                  ul():
-                    li():
-                      a(href="/cve/1996/m/4"):
-                        text "April"
-                    li():
-                      a(href="/cve/1996/m/2"):
-                        text "February"
+            ctx.renderCveDateSidebar(year, allYears, yearMonths)
 
-proc renderCveMonth*(ctx: Context, pgn: Pagination): VNode =
+proc renderCveMonth*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[int]): VNode =
   let
     year = ctx.ctxData.getOrDefault("year")
     month = ctx.ctxData.getOrDefault("month")
@@ -260,17 +264,4 @@ proc renderCveMonth*(ctx: Context, pgn: Pagination): VNode =
             hr()
             ctx.renderPagination(pgn, "cveMonth", {"year": year, "month": month})
           tdiv(class="column is-2"):
-            aside(class="menu"):
-              p(class="menu-label"):
-                text "Browse By Date "
-              ul(class="menu-list"):
-                li():
-                  a(class="",href="/cve/2021"):
-                    text "2021"
-                  ul():
-                    li():
-                      a(href="/cve/1996/m/4"):
-                        text "April"
-                    li():
-                      a(href="/cve/1996/m/2"):
-                        text "February"
+            ctx.renderCveDateSidebar(year, allYears, yearMonths)

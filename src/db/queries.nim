@@ -31,8 +31,10 @@ proc parseCveRow(row: Row): Cve {.inline.} =
   if cveData != "":
     let cveDataJson = parseJson(cveData)
     result.description = cveDataJson["cve"]["description"]["description_data"][0]["value"].getStr()
-    for item in cveDataJson["cve"]["references"]["reference_data"]:
-      result.refUrls.add(item["url"].getStr())
+
+    if len(cveDataJson["cve"]["references"]["reference_data"]) > 0:
+      for item in cveDataJson["cve"]["references"]["reference_data"]:
+        result.refUrls.add(item["url"].getStr())
 
     # CVSS data if exists
     let score = cveDataJson["impact"]["baseMetricV3"]["cvssV3"]["baseScore"].getFloat()
@@ -74,27 +76,40 @@ const
     limit 10 offset ?""".unindent)
   cvesByMonthCountQuery = sql("select count(*) from cves where published_date between ? and ?")
 
+  ## selects all distinct years from cves
+  cveYearsQuery = sql("select distinct(extract(year from published_date))::INTEGER as year FROM cves order by year desc")
+
+  ## selects all months available in a year from cves
+  # SELECT date_part('month', DATE_TRUNC('month', published_date)) as month FROM "cves" WHERE (extract(year from published_date) = 2020) GROUP BY month order by month asc
+  cveYearMonthsQuery = sql("""select date_part('month', date_trunc('month', published_date)) as month from cves
+  where (extract(year from published_date) = ?)
+  group by month order by month desc""".unindent)
+
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
   cveCweQuery = sql("select name, description from cwes where id = ?")
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let
     rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
     data = rows[0]
     id = data[0]         # pk id; field idx 0
+    wikiData = data[6]
     cweId = data[7]      # field idx 7
+
   # Build basic Cve object
   result = parseCveRow(data)
+
   # Relational queries for rest of fields
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
-  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
-  result.wiki = parseJson(data[6])
 
-#proc getCveByCveId*(cveId: string): Future[Cve] {.async.} =
-#  var param = cveId
-#  let rows = await db.rows(cveByCveIdQuery, @[param])
-#  result = parseCveRow(rows[0])
+  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
+
+  result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
+  if wikiData != "":
+    result.wiki = parseJson(data[6])
+
 
 template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =
   ## Injects offset and count variables for paginated queries
@@ -125,3 +140,13 @@ proc getCvesByMonth*(db: AsyncPool; year: int, month: int; page: int = 1): Futur
   result = newPagination[Cve](cvesByMonthQuery, page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
+
+proc getCveYears*(db: AsyncPool): Future[seq[int]] {.async.} =
+  let rows = await db.rows(cveYearsQuery, @[])
+  for row in rows:
+    result.add parseInt(row[0])
+
+proc getCveYearMonths*(db: AsyncPool, year: int): Future[seq[int]] {.async.} =
+  let rows = await db.rows(cveYearMonthsQuery, @[$year])
+  for row in rows:
+    result.add parseInt(row[0])

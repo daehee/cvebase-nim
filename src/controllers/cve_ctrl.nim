@@ -35,13 +35,20 @@ proc showCveYear*(ctx: Context) {.async.} =
     respDefault Http404
     return
 
+  # Sidebar date items
+  let
+    allYears = await db.getCveYears()
+    yearMonths = await db.getCveYearMonths(year)
+
   # Set year in ctx using first cve item (prevent injection of variable in template)
-  let yearStr = $pgn.items[0].year
+  let
+    aCve = pgn.items[0]
+    yearStr = $aCve.pubDate.year
   ctx.ctxData["year"] = yearStr
   ctx.ctxData["title"] = &"CVEs Published in {yearStr}"
   ctx.ctxData["description"] = &"Browse the top 100 CVE vulnerabilities of {yearStr} by PoC exploits available."
 
-  resp ctx.renderMain(ctx.renderCveYear(pgn), renderHero(&"Most Exploitable CVEs of {yearStr}"))
+  resp ctx.renderMain(ctx.renderCveYear(pgn, allYears, yearMonths), renderHero(&"Most Exploitable CVEs of {yearStr}"))
 
 proc showCveMonth*(ctx: Context) {.async.} =
   var year, month: int
@@ -58,6 +65,11 @@ proc showCveMonth*(ctx: Context) {.async.} =
     respDefault Http404
     return
 
+  # Sidebar date items
+  let
+    allYears = await db.getCveYears()
+    yearMonths = await db.getCveYearMonths(year)
+
   # Set year in ctx using first cve item (prevent injection of variable in template)
   let
     aCve = pgn.items[0]
@@ -69,4 +81,4 @@ proc showCveMonth*(ctx: Context) {.async.} =
   ctx.ctxData["title"] = &"CVEs Published in {monthStr} {yearStr}"
   ctx.ctxData["description"] = &"Browse CVE vulnerabilities published in {monthStr} {yearStr}."
 
-  resp ctx.renderMain(ctx.renderCveMonth(pgn), renderHero(&"CVEs Published in {monthStr} {yearStr}"))
+  resp ctx.renderMain(ctx.renderCveMonth(pgn, allYears, yearMonths), renderHero(&"CVEs Published in {monthStr} {yearStr}"))

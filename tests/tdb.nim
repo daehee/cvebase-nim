@@ -22,6 +22,12 @@ suite "db tests":
       check cve.cvss3.get().severity == "CRITICAL"
       check len(cve.wiki["advisory"].getStr()) > 0
 
+    block:
+      let cve = waitFor db.getCveBySequence(2020, 29156)
+      check cve.cveId == "CVE-2020-29156"
+      check not cve.wiki.hasKey("advisory")
+
+
   test "CVE Weakness":
     block:
       let cve = waitFor db.getCveBySequence(2020, 14882)
@@ -48,9 +54,10 @@ suite "db tests":
       check pgn.hasNext == true
       check pgn.hasPrev == false
 
+
   test "getCvesByMonth":
     block:
-      let pgn = waitFor db.getCvesByMonth(2020, 8)
+      let pgn = waitFor db.getCvesByMonth(2020, 12)
       check pgn.page == 1
       check pgn.perPage == 10
       check pgn.total > 0
@@ -59,5 +66,18 @@ suite "db tests":
       check pgn.prevNum == 0
       check pgn.hasNext == true
       check pgn.hasPrev == false
+
+  test "getCveYears":
+    block:
+      let years = waitFor db.getCveYears()
+      check years == @[2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005, 2004, 2003, 2002, 2001, 2000, 1999, 1997, 1996]
+
+  test "getCveYearMonths":
+    block:
+      let months = waitFor db.getCveYearMonths(2020)
+      check months == @[12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    block:
+      let months = waitFor db.getCveYearMonths(1996)
+      check months == @[4, 2]
 
   waitFor db.close()
