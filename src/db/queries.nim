@@ -82,6 +82,12 @@ const
     limit 10 offset ?""").unindent.replace("\n", " "))
   cvesByMonthCountQuery = sql("select count(*) from cves where published_date between ? and ?")
 
+  cvesIndexQuery = sql((selectCvesIndexFields & """ from cves
+    where featured_at is not NULL
+    order by featured_at desc
+    limit 10 offset ?""").unindent.replace("\n", " "))
+  cvesIndexCountQuery = sql("select count(*) from cves where featured_at is not NULL")
+
   ## selects all distinct years from cves
   cveYearsQuery = sql("select distinct(extract(year from published_date))::INTEGER as year FROM cves order by year desc")
 
@@ -126,6 +132,13 @@ template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int
   let countResult = await db.rows(countQuery, countParams)
   let count {.inject.} = parseInt(countResult[0][0])
   # TODO: Error if invalid page number i.e. page > pages available
+
+proc getCvesIndex*(db: AsyncPool; page: int = 1): Future[Pagination[Cve]] {.async.} =
+  paginateQuery(cvesIndexCountQuery, @[], page)
+  let rows = await db.rows(cvesIndexQuery, @[$offset])
+  result = newPagination[Cve](cvesIndexQuery, page, resultsPerPage, count, newSeq[Cve]())
+  for item in rows:
+    result.items.add parseCveRow(item)
 
 proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(cvesByYearCountQuery, @[$year], page)

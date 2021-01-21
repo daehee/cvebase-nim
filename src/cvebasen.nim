@@ -56,6 +56,7 @@ let
     pattern("/{year}/m/{month}", showCveMonth, @[HttpGet], "cveMonth"),
     pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
+    pattern("/", showCveIndex, @[HttpGet], "cveIndex"),
   ]
   cnvdRoutes* = @[
     pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),

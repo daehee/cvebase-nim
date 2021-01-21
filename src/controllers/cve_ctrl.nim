@@ -122,3 +122,25 @@ proc showCveMonth*(ctx: Context) {.async.} =
   ctx.ctxData["description"] = &"Browse CVE vulnerabilities published in {monthStr} {yearStr}."
 
   resp ctx.renderMain(ctx.renderCveMonth(pgn, allYears, yearMonths), renderHero(&"CVEs Published in {monthStr} {yearStr}"))
+
+proc showCveIndex*(ctx: Context) {.async.} =
+  let pageParam = ctx.getQueryParams("page")
+  var pgn: Pagination[Cve]
+  if pageParam != "":
+    let pageNum = parseInt(pageParam)
+    pgn = await db.getCvesIndex(pageNum)
+  else:
+    pgn = await db.getCvesIndex()
+  if len(pgn.items) == 0:
+    respDefault Http404
+    return
+
+  let
+    today = now()
+    month = today.month
+    day = today.monthday
+
+  ctx.ctxData["title"] = &"Today's Trending CVE Vulnerabilities"
+  ctx.ctxData["description"] = &"Check out the latest CVE vulnerabilities the infosec community is talking about."
+
+  resp ctx.renderMain(ctx.renderCveIndex(pgn), renderHero(&"Trending CVEs for {month} {day}"))
