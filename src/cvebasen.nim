@@ -49,12 +49,20 @@ var app = newApp(settings = settings, startup = @[loggerEvent])
 # /bugbounty
 # /lab
 
+proc redirectCNVD(ctx: Context) {.async.} =
+  resp redirect("/cve")
+
 let
   cveRoutes* = @[
     pattern("/{year}/m/{month}", showCveMonth, @[HttpGet], "cveMonth"),
     pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
   ]
+  cnvdRoutes* = @[
+    pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),
+    pattern("/", redirectCNVD, @[HttpGet]),
+  ]
+
 
 proc go404*(ctx: Context) {.async.} =
   ## Custom 404 error handler
@@ -62,6 +70,6 @@ proc go404*(ctx: Context) {.async.} =
 
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(cveRoutes, "/cve")
+app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
 app.registerErrorHandler(Http404, go404)
 app.run()
-
