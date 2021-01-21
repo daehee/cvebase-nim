@@ -18,14 +18,14 @@ proc parsePgDateTime*(s: string): DateTime =
 ## Cve
 
 proc parseCveRow(row: Row): Cve {.inline.} =
-#  var
-#    refUrls: seq[string] = @[]
-#    description: string
-
   result.cveId = row[1]
   result.year = parseInt(row[2])
   result.sequence = parseInt(row[3])
   result.pubDate = parsePgDateTime(row[4])
+
+  # initialize with 0 if cve_pocs_count column is NULL
+  let pocsCount = row[6]
+  result.pocsCount = if pocsCount == "": 0 else: parseInt(pocsCount)
 
   let cveData = row[5]
   if cveData != "":
@@ -60,20 +60,21 @@ proc parseCwe(rows: seq[Row]): Cwe =
 const
   resultsPerPage = 10
 
-  cveBySequenceQuery = sql("select id, cve_id, year, sequence, published_date, data, wiki_data, cwe_id from cves where year = ? and sequence = ?")
+  selectCvesIndexFields = "select id, cve_id, year, sequence, published_date, data, cve_pocs_count"
+  cveBySequenceQuery = sql(selectCvesIndexFields & ", wiki_data, cwe_id from cves where year = ? and sequence = ?")
 
-  cvesByYearQuery = sql("""select id, cve_id, year, sequence, published_date, data from cves
+  cvesByYearQuery = sql((selectCvesIndexFields & """ from cves
     where extract(year from published_date) = ?
     order by cve_pocs_count
     desc nulls last
-    limit 10 offset ?""".unindent)
+    limit 10 offset ?""").unindent.replace("\n", " "))
   cvesByYearCountQuery = sql("select count(*) from cves where extract(year from published_date) = ?")
 
   # Cve.where(published_date: d.beginning_of_month.beginning_of_day..d.end_of_month.end_of_day).order('published_date DESC')
-  cvesByMonthQuery= sql("""select id, cve_id, year, sequence, published_date, data from cves
+  cvesByMonthQuery = sql((selectCvesIndexFields & """ from cves
     where published_date between ? and ?
     order by published_date desc
-    limit 10 offset ?""".unindent)
+    limit 10 offset ?""").unindent.replace("\n", " "))
   cvesByMonthCountQuery = sql("select count(*) from cves where published_date between ? and ?")
 
   ## selects all distinct years from cves
@@ -94,8 +95,8 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
     rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
     data = rows[0]
     id = data[0]         # pk id; field idx 0
-    wikiData = data[6]
-    cweId = data[7]      # field idx 7
+    wikiData = data[7]
+    cweId = data[8]
 
   # Build basic Cve object
   result = parseCveRow(data)
@@ -108,7 +109,7 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 
   result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
   if wikiData != "":
-    result.wiki = parseJson(data[6])
+    result.wiki = parseJson(wikiData)
 
 
 template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =

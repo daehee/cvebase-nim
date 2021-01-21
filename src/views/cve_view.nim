@@ -210,8 +210,11 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
             span(class="is-size-7"):
               a(class = "has-text-white", href = linkToCve):
                 text "show details"
-          p(class="card-footer-item")
-          # TODO: PoC exploits available
+          p(class="card-footer-item"):
+            span(class="is-size-7"):
+              if cve.pocsCount > 0:
+                a(class = "has-text-primary", href = linkToCve):
+                  text &"{cve.pocsCount} PoC exploits available"
 
 proc renderCveDateSidebar(ctx: Context; selected: tuple[year, monthNum: string]; allYears, yearMonths: seq[int]): VNode =
   buildHtml():

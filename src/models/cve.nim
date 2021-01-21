@@ -14,6 +14,7 @@ type
     pocs*: seq[Poc]
     cwe*: Option[Cwe]
     wiki*: JsonNode
+    pocsCount*: int
 
   Cvss3* = object
     score*: string
