@@ -223,14 +223,17 @@ proc renderCveDateSidebar(ctx: Context; year: string; allYears, yearMonths: seq[
       ul(class="menu-list"):
         for y in allYears:
           li:
-            a(href = ctx.urlFor("cveYear", {"year": $y})):
-              text $y
             if $y == year:
+              a(class = "is-active", href = ctx.urlFor("cveYear", {"year": $y})):
+                text $y
               ul:
                 for m in yearMonths:
                   li:
                     a(href = ctx.urlFor("cveMonth", {"year": $y, "month": $m})):
                       text $Month(m)
+            else:
+              a(href = ctx.urlFor("cveYear", {"year": $y})):
+                text $y
 
 proc renderCveYear*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[int]): VNode =
   let year = ctx.ctxData.getOrDefault("year")
