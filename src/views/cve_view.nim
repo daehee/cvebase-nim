@@ -146,8 +146,7 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
               text "Proof-of-Concept Exploits"
             details():
               summary():
-                let numPocs = len(cve.pocs)
-                text &"View list ({numPocs})"
+                text &"View list ({cve.pocsCount})"
               ul(id="pocs"):
                 for url in cve.pocs.map(proc(x: Poc): string = x.url):
                   li:
