@@ -3,6 +3,11 @@ import std/[asyncdispatch, json, tables, times, strutils, options, strformat, st
 import ./pg
 import ../models/[cve, pagination]
 
+export PGError
+
+type
+  NotFoundException* = object of Exception
+
 #proc parseNvdDateTime*(s: string): DateTime =
 #  # Example: "2006-01-02T15:04Z"
 #  let layout = "yyyy-MM-dd'T'HH:mm'Z'"
@@ -91,8 +96,11 @@ const
 
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
+  let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
+  if len(rows) == 0:
+    raise newException(NotFoundException, &"CVE-{$year}-{$seq} not found")
+
   let
-    rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
     data = rows[0]
     id = data[0]         # pk id; field idx 0
     wikiData = data[7]

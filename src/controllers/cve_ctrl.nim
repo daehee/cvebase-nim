@@ -9,28 +9,61 @@ import
   ../views/[layout_view, cve_view],
   ../helpers/app_helper
 
+let currentYear = now().year
+
+proc isValidYear(year: int): bool =
+  if year in 1996..currentYear: return true
+
+proc isValidMonth(month: int): bool =
+  if month in 1..12: return true
+
+
 proc showCve*(ctx: Context) {.async.} =
   var year, seq: int
-  year = parseInt(ctx.getPathParams("year"))
+  try:
+    year = parseInt(ctx.getPathParams("year"))
+  except:
+    respDefault Http404
+    return
+
+  if not year.isValidYear():
+    respDefault Http404
+    return
   seq = parseInt(ctx.getPathParams("sequence"))
 
-  let cve = await db.getCveBySequence(year, seq)
+  try:
+    let cve = await db.getCveBySequence(year, seq)
+    ctx.ctxData["title"] = cve.titleTag
+    ctx.ctxData["description"] = cve.description.truncate(160)
 
-  ctx.ctxData["title"] = cve.titleTag
-  ctx.ctxData["description"] = cve.description.truncate(160)
+    resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve.cveId))
+  except NotFoundException:
+    respDefault Http404
+    return
+  except PGError:
+    respDefault Http404
+    return
 
-  resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve.cveId))
 
 proc showCveYear*(ctx: Context) {.async.} =
   var year: int
   year = parseInt(ctx.getPathParams("year"))
+  if not year.isValidYear():
+    respDefault Http404
+    return
+
   let pageParam = ctx.getQueryParams("page")
   var pgn: Pagination[Cve]
-  if pageParam != "":
-    let pageNum = parseInt(pageParam)
-    pgn = await db.getCvesByYear(year, pageNum)
-  else:
-    pgn = await db.getCvesByYear(year)
+  try:
+    if pageParam != "":
+      let pageNum = parseInt(pageParam)
+      pgn = await db.getCvesByYear(year, pageNum)
+    else:
+      pgn = await db.getCvesByYear(year)
+  except PGError:
+    respDefault Http404
+    return
+
   if len(pgn.items) == 0:
     respDefault Http404
     return
@@ -53,7 +86,14 @@ proc showCveYear*(ctx: Context) {.async.} =
 proc showCveMonth*(ctx: Context) {.async.} =
   var year, month: int
   year = parseInt(ctx.getPathParams("year"))
+  if not year.isValidYear():
+    respDefault Http404
+    return
   month = parseInt(ctx.getPathParams("month"))
+  if not month.isValidMonth():
+    respDefault Http404
+    return
+
   let pageParam = ctx.getQueryParams("page")
   var pgn: Pagination[Cve]
   if pageParam != "":
