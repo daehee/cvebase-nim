@@ -16,7 +16,11 @@ proc renderHero*(title: string): HeroVNode =
           text title
   hero.HeroVNode # Explicit type conversion to distinct type
 
-proc renderSidebar(cve: Cve): VNode =
+proc renderSidebar(ctx: Context, cve: Cve): VNode =
+  let
+    cvePubYear = $cve.pubDate.year
+    cvePubMonth = $cve.pubDate.month
+    cvePubMonthNum = $cve.pubDate.month.ord()
   buildHtml(tdiv(class="column is-3 is-offset-1")):
     aside(class="menu"):
       p(class="menu-label"):
@@ -42,8 +46,8 @@ proc renderSidebar(cve: Cve): VNode =
           a(href="/cve"):
             text "Popular CVEs"
         li():
-          a(href = "REPLACEME"):
-            text &"{$cve.pubDate.month()} {$cve.pubDate.year()} CVEs"
+          a(href = ctx.urlFor("cveMonth", {"year": cvePubYear, "month": cvePubMonthNum})):
+            text &"{cvePubMonth} {cvePubYear} CVEs"
 
 proc renderCveDateBreadcrumbs(ctx: Context, cve: Cve): VNode =
   ## cve
@@ -184,7 +188,7 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                       text peekCveLink(item)
                       span(class="icon has-text-grey-light is-size-6"):
                         italic(class="fas fa-external-link-square-alt")
-        renderSidebar(cve)
+        ctx.renderSidebar(cve)
 
 proc renderCvssTag(cvss3: Cvss3): VNode =
   let colorClass = severityColorClass(cvss3.severity)
