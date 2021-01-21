@@ -99,14 +99,6 @@ proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
           a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
             text $monthDate
 
-proc severityColorClass(severity: string): string {.inline.} =
-  result = case severity:
-  of "LOW": "is-severity-low"
-  of "MEDIUM": "is-severity-medium"
-  of "HIGH": "is-severity-high"
-  of "CRITICAL": "is-severity-critical"
-  else: "is-dark"
-
 proc renderCve*(ctx: Context, cve: Cve): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
