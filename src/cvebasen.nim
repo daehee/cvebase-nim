@@ -8,7 +8,7 @@ import
 import
   globals,
   config,
-  controllers/[cve_ctrl]
+  controllers/[cve_ctrl, researcher_ctrl]
 from db/pg import newAsyncPool
 
 
@@ -58,6 +58,10 @@ let
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
     pattern("/", showCveIndex, @[HttpGet], "cveIndex"),
   ]
+  researcherRoutes* = @[
+    pattern("/{alias}", showResearcher, @[HttpGet], "researcher"),
+    # pattern("/", showResearcherIndex, @[HttpGet], "researcherIndex"),
+  ]
   cnvdRoutes* = @[
     pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),
     pattern("/", redirectCNVD, @[HttpGet]),
@@ -70,6 +74,7 @@ proc go404*(ctx: Context) {.async.} =
 
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(cveRoutes, "/cve")
+app.addRoute(researcherRoutes, "/researcher")
 app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
 app.registerErrorHandler(Http404, go404)
 app.run()

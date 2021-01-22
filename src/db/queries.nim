@@ -1,7 +1,7 @@
 import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils]
 
 import ./pg
-import ../models/[cve, pagination]
+import ../models/[cve, researcher, pagination]
 
 export PGError
 
@@ -100,6 +100,10 @@ const
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
   cveCweQuery = sql("select name, description from cwes where id = ?")
 
+  researcherQuery = sql("""select id, name, alias, nationality, bio, cves_count,
+    website, twitter, github, linkedin, hackerone, bugcrowd
+    from researchers where slug = ?""")
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
@@ -172,3 +176,28 @@ proc getCveYearMonths*(db: AsyncPool, year: int): Future[seq[int]] {.async.} =
   let rows = await db.rows(cveYearMonthsQuery, @[$year])
   for row in rows:
     result.add parseInt(row[0])
+
+proc fieldOption(field: string): Option[string] =
+  if field != "": return some(field)
+
+proc getResearcher*(db: AsyncPool; alias: string): Future[Researcher] {.async.} =
+  let rows = await db.rows(researcherQuery, @[alias])
+  if len(rows) == 0:
+    raise newException(NotFoundException, &"Researcher {alias} not found")
+
+  let data = rows[0]
+
+  result.id = parseInt(data[0]) # pk id; field idx 0
+  result.name = data[1]
+  result.alias = data[2]
+  result.nationality = data[3]
+  result.bio = data[4]
+  result.cvesCount = parseInt(data[5])
+  result.social = ResearcherSocial(
+    website: data[6].fieldOption,
+    twitter: data[7].fieldOption,
+    github: data[8].fieldOption,
+    linkedin: data[9].fieldOption,
+    hackerone: data[10].fieldOption,
+    bugcrowd: data[11].fieldOption,
+  )
