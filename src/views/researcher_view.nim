@@ -124,7 +124,7 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                     tr():
                       td():
                         small(class="has-text-grey-light"):
-                          text $cve.pubDate
+                          text cve.pubDate.format("MM/dd")
                       td():
                         a(class="is-size-5 has-text-weight-semibold has-text-primary",href= linkToCve):
                           text cve.cveId
