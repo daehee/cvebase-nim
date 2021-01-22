@@ -1,5 +1,5 @@
 import unittest
-import std/[asyncdispatch, times, uri, strutils, options, json]
+import std/[asyncdispatch, times, uri, strutils, options, json, sequtils]
 
 import models/[cve, pagination]
 import db/[pg, queries]
@@ -79,5 +79,10 @@ suite "db tests":
     block:
       let months = waitFor db.getCveYearMonths(1996)
       check months == @[4, 2]
+
+  test "cveResearchersQuery":
+    block:
+      let researchers = waitFor db.getResearchersByCveId(338)
+      check researchers.anyIt(it.alias in @["bar-lahav", "honggang-ren", "hardik-shah", "galdeleon"])
 
   waitFor db.close()

@@ -4,7 +4,7 @@ import markdown
 
 import prologue/core/context
 
-import ../models/[cve, pagination]
+import ../models/[cve, pagination, researcher]
 import ../helpers/[app_helper, cve_helper]
 import layout_view
 
@@ -89,7 +89,7 @@ proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
           a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
             text $monthDate
 
-proc renderCve*(ctx: Context, cve: Cve): VNode =
+proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
@@ -120,6 +120,17 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
               small(class="has-text-grey-light"):
                 let fmtDate = cve.pubDate.format("yyyy-MM-dd")
                 text &"Published: {fmtDate}"
+
+            # Researcher Credit
+            if researchers.len > 0:
+              h3:
+                text "Researcher Credit"
+              ul:
+                for researcher in researchers:
+                  li:
+                    a(href = ctx.urlFor("researcher", {"alias": researcher.alias})):
+                      text researcher.name
+
             h3():
               text "Community Advisory"
             if cve.wiki.hasKey("advisory"):

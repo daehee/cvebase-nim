@@ -112,6 +112,9 @@ const
   INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
   WHERE cves_researchers.researcher_id = ?""".unindent.replace("\n", " "))
 
+  cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in
+  (select researcher_id from cves_researchers where cve_id = ?)""")
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
@@ -120,18 +123,18 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 
   let
     data = rows[0]
-    id = data[0]         # pk id; field idx 0
     wikiData = data[7]
     cweId = data[8]
 
   # Build basic Cve object
   result = parseCveRow(data)
+  result.id = parseInt(data[0])  # primary key; field idx 0
 
   # Relational queries for rest of fields
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
 
-  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[id]))
+  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[$result.id]))
 
   result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
   if wikiData != "":
@@ -216,3 +219,8 @@ proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Paginati
   result = newPagination[Cve](researcherCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
+
+proc getResearchersByCveId*(db: AsyncPool, cveId: int): Future[seq[Researcher]] {.async.} =
+  let rows = await db.rows(cveResearchersQuery, @[$cveId])
+  for item in rows:
+    result.add Researcher(alias: item[0], name: item[1])

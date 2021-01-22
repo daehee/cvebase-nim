@@ -33,10 +33,11 @@ proc showCve*(ctx: Context) {.async.} =
 
   try:
     let cve = await db.getCveBySequence(year, seq)
+    let researchers = await db.getResearchersByCveId(cve.id)
     ctx.ctxData["title"] = cve.titleTag
     ctx.ctxData["description"] = cve.description.truncate(160)
 
-    resp ctx.renderMain(ctx.renderCve(cve), renderHero(cve.cveId))
+    resp ctx.renderMain(ctx.renderCve(cve, researchers), renderHero(cve.cveId))
   except NotFoundException:
     respDefault Http404
     return

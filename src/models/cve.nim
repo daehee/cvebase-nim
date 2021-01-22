@@ -4,6 +4,7 @@ import ../helpers/app_helper
 
 type
   Cve* = object
+    id*: int # primary key from db
     cveId*: string
     year*: int
     sequence*: int
