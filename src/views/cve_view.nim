@@ -181,8 +181,9 @@ proc renderCveCard(ctx: Context, cve:Cve): VNode =
           p(class="card-header-title"):
             a(class = "has-text-primary-light is-size-5", href = linkToCve):
               text cve.cveId
-          if cve.cvss3.isSome():
-            renderCvssTag(cve.cvss3.get())
+          tdiv(class="card-header-icon"):
+            if cve.cvss3.isSome():
+              renderCvssTag(cve.cvss3.get())
         tdiv(class="card-content has-background-black"):
           p():
             text truncate(cve.description, 180)

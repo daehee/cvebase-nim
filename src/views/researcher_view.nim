@@ -133,9 +133,8 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                           small(class="has-text-white"):
                             text truncate(cve.description, 120)
                       td():
-                        tdiv(class="tags"):
-                          span(class="tag is-severity-critical"):
-                            text "9.8 CRITICAL "
+                        if cve.cvss3.isSome():
+                          renderCvssTag(cve.cvss3.get())
             tdiv(class="content block"):
               p():
                 small(class="has-text-grey-light"):

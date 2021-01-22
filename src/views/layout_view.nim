@@ -164,7 +164,6 @@ proc renderHero*(title: string): HeroVNode =
 proc renderCvssTag*(cvss3: Cvss3): VNode =
   let colorClass = severityColorClass(cvss3.severity)
   buildHtml():
-    tdiv(class="card-header-icon"):
-      tdiv(class="tags"):
-        span(class = &"tag {colorClass}"):
-          text cvss3.score
+    tdiv(class="tags"):
+      span(class = &"tag {colorClass}"):
+        text cvss3.score
