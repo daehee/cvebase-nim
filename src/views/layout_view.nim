@@ -148,3 +148,11 @@ proc renderPagination*(ctx: Context, pgn: Pagination, route: string, params: ope
       if pgn.hasNext:
         a(class = "pagination-next", href = ctx.urlFor(route, params, {"page": $pgn.nextNum})):
           text "Next page"
+
+proc renderHero*(title: string): HeroVNode =
+  let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):
+    tdiv(class="hero-body"):
+      tdiv(class="container has-text-centered"):
+        h1(class="title is-2"):
+          text title
+  hero.HeroVNode # Explicit type conversion to distinct type

@@ -8,14 +8,6 @@ import ../models/[cve, pagination]
 import ../helpers/[app_helper, cve_helper]
 import layout_view
 
-proc renderHero*(title: string): HeroVNode =
-  let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):
-    tdiv(class="hero-body"):
-      tdiv(class="container has-text-centered"):
-        h1(class="title is-2"):
-          text title
-  hero.HeroVNode # Explicit type conversion to distinct type
-
 proc renderSidebar(ctx: Context, cve: Cve): VNode =
   let
     cvePubYear = $cve.pubDate.year
