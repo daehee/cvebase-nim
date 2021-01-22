@@ -1,4 +1,4 @@
-import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils]
+import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils, sequtils]
 
 import ./pg
 import ../models/[cve, researcher, pagination]
@@ -118,6 +118,17 @@ const
   researcherLeaderboardQuery = sql("""select alias, name from researchers
   order by cves_count desc limit 25""")
 
+  # Get the 10 most recent & unique cves that have researcher credit
+  researchersCveActivityQuery = sql("""SELECT DISTINCT cves.id, cves.cve_id, cves.year, cves.sequence, cves.published_date, cves.data, cves.cve_pocs_count, researchers.id FROM cves
+  INNER JOIN cves_researchers ON cves_researchers.cve_id = cves.id
+  INNER JOIN researchers ON researchers.id = cves_researchers.researcher_id
+  ORDER BY published_date DESC LIMIT 10""".unindent.replace("\n", " "))
+#  researchersInQuery = sql("""select id, alias, name from researchers where id in ({})""")
+
+proc questionify*(n: int): string =
+  ## Produces a string like '?,?,?' for n specified entries.
+  repeat("?,", (n - 1)) & "?"
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
@@ -232,3 +243,24 @@ proc getResearcherLeaderboard*(db: AsyncPool): Future[seq[Researcher]] {.async.}
   let rows = await db.rows(researcherLeaderboardQuery, @[])
   for item in rows:
     result.add Researcher(alias: item[0], name: item[1])
+
+proc getResearchersCveActivity*(db: AsyncPool): Future[seq[ResearcherCve]] {.async.} =
+  let rows = await db.rows(researchersCveActivityQuery, @[])
+
+  var cves = initTable[string, Cve]() # researcher ids mapped to Cve
+  for item in rows:
+    result.add ResearcherCve(
+      cve: parseCveRow(item),
+      researcherId: item[7],
+    )
+
+  let rIds = result.mapIt(it.researcherId).deduplicate
+
+  let qNum = questionify(rIds.len)
+  let researchersInQuery = sql(&"select id, alias, name from researchers where id in ({qNum})")
+
+  let rows2 = await db.rows(researchersInQuery, rIds)
+  for i, item in result.pairs:
+    let match = rows2.filterIt(it[0] == item.researcherId)[0]
+    result[i].alias = match[1]
+    result[i].name = match[2]

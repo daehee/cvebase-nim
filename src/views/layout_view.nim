@@ -166,4 +166,4 @@ proc renderCvssTag*(cvss3: Cvss3): VNode =
   buildHtml():
     tdiv(class="tags"):
       span(class = &"tag {colorClass}"):
-        text cvss3.score
+        text &"{cvss3.score} {cvss3.severity}"

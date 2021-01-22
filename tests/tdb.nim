@@ -1,5 +1,5 @@
 import unittest
-import std/[asyncdispatch, times, uri, strutils, options, json, sequtils]
+import std/[asyncdispatch, times, uri, strutils, options, json, sequtils, strformat]
 
 import models/[cve, pagination]
 import db/[pg, queries]
@@ -84,5 +84,12 @@ suite "db tests":
     block:
       let researchers = waitFor db.getResearchersByCveId(338)
       check researchers.anyIt(it.alias in @["bar-lahav", "honggang-ren", "hardik-shah", "galdeleon"])
+
+  test "getResearchersCveActivity":
+    block:
+      let res = waitFor db.getResearchersCveActivity()
+      check len(res) == 10
+#      for item in res:
+#        echo &"{item.alias} {item.cve.cveId}"
 
   waitFor db.close()

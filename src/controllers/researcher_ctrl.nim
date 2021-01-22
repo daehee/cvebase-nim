@@ -35,8 +35,9 @@ proc showResearcher*(ctx: Context) {.async.} =
 
 proc showResearcherIndex*(ctx: Context) {.async.} =
   let leaders = await db.getResearcherLeaderboard()
+  let activity = await db.getResearchersCveActivity()
 
   ctx.ctxData["title"] = "Top CVE Security Researchers"
   ctx.ctxData["description"] = "The latest exploits from the world's top security researchers"
 
-  resp ctx.renderMain(ctx.renderResearcherIndex(leaders))
+  resp ctx.renderMain(ctx.renderResearcherIndex(leaders, activity))
