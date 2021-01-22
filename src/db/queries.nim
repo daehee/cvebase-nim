@@ -104,6 +104,14 @@ const
     website, twitter, github, linkedin, hackerone, bugcrowd
     from researchers where slug = ?""")
 
+  researcherCvesQuery  = sql("""select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count from cves
+  INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
+  where cves_researchers.researcher_id = ?
+  order by published_date desc limit 10 offset ?""".unindent.replace("\n", " "))
+  researcherCvesCountQuery = sql("""select count(*) FROM cves
+  INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
+  WHERE cves_researchers.researcher_id = ?""".unindent.replace("\n", " "))
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
@@ -201,3 +209,10 @@ proc getResearcher*(db: AsyncPool; alias: string): Future[Researcher] {.async.} 
     hackerone: data[10].fieldOption,
     bugcrowd: data[11].fieldOption,
   )
+
+proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
+  paginateQuery(researcherCvesCountQuery, @[$rId], page)
+  let rows = await db.rows(researcherCvesQuery, @[$rId, $offset])
+  result = newPagination[Cve](researcherCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
+  for item in rows:
+    result.items.add parseCveRow(item)

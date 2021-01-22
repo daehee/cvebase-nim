@@ -119,38 +119,23 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                 text &"{researcher.name} CVE Credits "
               table(class="table is-fullwidth"):
                 tbody():
-                  tr():
-                    td():
-                      small(class="has-text-grey-light"):
-                        text "12/12"
-                    td():
-                      a(class="is-size-5 has-text-weight-semibold has-text-primary",href="/cve/2020/29563"):
-                        text "CVE-2020-29563"
-                      br()
-                      p():
-                        small(class="has-text-white"):
-                          text "An issue was discovered on Western Digital My Cloud OS 5 devices before 5.07.118. A NAS Admin authentication bypass... "
-                    td():
-                      tdiv(class="tags"):
-                        span(class="tag is-severity-critical"):
-                          text "9.8 CRITICAL "
-                  tr():
-                    td():
-                      small(class="has-text-grey-light"):
-                        text "07/07"
-                    td():
-                      a(class="is-size-5 has-text-weight-semibold has-text-primary",href="/cve/2020/15506"):
-                        text "CVE-2020-15506"
-                      br()
-                      p():
-                        small(class="has-text-white"):
-                          text "An authentication bypass vulnerability in MobileIron Core "
-                          text "&"
-                          text "Connector versions 10.3.0.3 and earlier, 10.4.0.0,... "
-                    td():
-                      tdiv(class="tags"):
-                        span(class="tag is-severity-critical"):
-                          text "9.8 CRITICAL "
+                  for cve in pgn.items:
+                    let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
+                    tr():
+                      td():
+                        small(class="has-text-grey-light"):
+                          text $cve.pubDate
+                      td():
+                        a(class="is-size-5 has-text-weight-semibold has-text-primary",href= linkToCve):
+                          text cve.cveId
+                        br()
+                        p():
+                          small(class="has-text-white"):
+                            text truncate(cve.description, 120)
+                      td():
+                        tdiv(class="tags"):
+                          span(class="tag is-severity-critical"):
+                            text "9.8 CRITICAL "
             tdiv(class="content block"):
               p():
                 small(class="has-text-grey-light"):

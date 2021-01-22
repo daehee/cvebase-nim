@@ -1,3 +1,4 @@
+import std/[strutils]
 
 import prologue
 
@@ -11,14 +12,20 @@ import
 proc showResearcher*(ctx: Context) {.async.} =
   let alias = ctx.getPathParams("alias")
 
+  let pageParam = ctx.getQueryParams("page")
+  var pgn: Pagination[Cve]
   try:
     let researcher = await db.getResearcher(alias)
-#    let pgn = await db.getResearcherCves(researcher.id)
+    if pageParam != "":
+      let pageNum = parseInt(pageParam)
+      pgn = await db.getResearcherCves(researcher.id, pageNum)
+    else:
+      pgn = await db.getResearcherCves(researcher.id)
 
     ctx.ctxData["title"] = researcher.name
     ctx.ctxData["description"] = researcher.bio.truncate(160)
 
-    resp ctx.renderMain(ctx.renderResearcher(researcher, Pagination[Cve]()), renderHero(researcher.name))
+    resp ctx.renderMain(ctx.renderResearcher(researcher, pgn), renderHero(researcher.name))
   except NotFoundException:
     respDefault Http404
     return
