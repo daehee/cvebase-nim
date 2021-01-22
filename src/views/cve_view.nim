@@ -273,7 +273,7 @@ proc renderCveMonth*(ctx: Context, pgn: Pagination; allYears, yearMonths: seq[in
           tdiv(class="column is-2"):
             ctx.renderCveDateSidebar((year: year, monthNum: $monthNum), allYears, yearMonths)
 
-proc renderCveIndex*(ctx: Context, pgn: Pagination): VNode =
+proc renderCveIndex*(ctx: Context, pgn: Pagination, allyears: seq[int]): VNode =
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
@@ -284,3 +284,5 @@ proc renderCveIndex*(ctx: Context, pgn: Pagination): VNode =
                 ctx.renderCveCard(cve)
             hr()
             ctx.renderPagination(pgn, "cveIndex", @[])
+          tdiv(class="column is-2"):
+            ctx.renderCveDateSidebar((year: "", monthNum: ""), allYears, newSeq[int]())

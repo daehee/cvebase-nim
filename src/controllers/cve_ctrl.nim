@@ -136,6 +136,8 @@ proc showCveIndex*(ctx: Context) {.async.} =
     respDefault Http404
     return
 
+  let allYears = await db.getCveYears()
+
   let
     today = now()
     month = today.month
@@ -144,4 +146,4 @@ proc showCveIndex*(ctx: Context) {.async.} =
   ctx.ctxData["title"] = &"Today's Trending CVE Vulnerabilities"
   ctx.ctxData["description"] = &"Check out the latest CVE vulnerabilities the infosec community is talking about."
 
-  resp ctx.renderMain(ctx.renderCveIndex(pgn), renderHero(&"Trending CVEs for {month} {day}"))
+  resp ctx.renderMain(ctx.renderCveIndex(pgn, allYears), renderHero(&"Trending CVEs for {month} {day}"))
