@@ -115,6 +115,9 @@ const
   cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in
   (select researcher_id from cves_researchers where cve_id = ?)""")
 
+  researcherLeaderboardQuery = sql("""select alias, name from researchers
+  order by cves_count desc limit 25""")
+
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
@@ -222,5 +225,10 @@ proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Paginati
 
 proc getResearchersByCveId*(db: AsyncPool, cveId: int): Future[seq[Researcher]] {.async.} =
   let rows = await db.rows(cveResearchersQuery, @[$cveId])
+  for item in rows:
+    result.add Researcher(alias: item[0], name: item[1])
+
+proc getResearcherLeaderboard*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
+  let rows = await db.rows(researcherLeaderboardQuery, @[])
   for item in rows:
     result.add Researcher(alias: item[0], name: item[1])

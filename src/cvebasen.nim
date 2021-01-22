@@ -60,7 +60,7 @@ let
   ]
   researcherRoutes* = @[
     pattern("/{alias}", showResearcher, @[HttpGet], "researcher"),
-    # pattern("/", showResearcherIndex, @[HttpGet], "researcherIndex"),
+    pattern("/", showResearcherIndex, @[HttpGet], "researcherIndex"),
   ]
   cnvdRoutes* = @[
     pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),

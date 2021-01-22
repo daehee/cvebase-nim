@@ -32,3 +32,11 @@ proc showResearcher*(ctx: Context) {.async.} =
   except PGError:
     respDefault Http404
     return
+
+proc showResearcherIndex*(ctx: Context) {.async.} =
+  let leaders = await db.getResearcherLeaderboard()
+
+  ctx.ctxData["title"] = "Top CVE Security Researchers"
+  ctx.ctxData["description"] = "The latest exploits from the world's top security researchers"
+
+  resp ctx.renderMain(ctx.renderResearcherIndex(leaders))
