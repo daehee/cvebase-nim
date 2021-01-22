@@ -18,11 +18,3 @@ proc renderCveLabButtons*(labsJson: seq[JsonNode]): VNode =
         span:
           # TODO: Stack as numbered collection when duplicate vendors e.g. Vulhub 1, Vulhub 2
           text urlToLabVendor(url)
-
-proc severityColorClass*(severity: string): string {.inline.} =
-  result = case severity:
-  of "LOW": "is-severity-low"
-  of "MEDIUM": "is-severity-medium"
-  of "HIGH": "is-severity-high"
-  of "CRITICAL": "is-severity-critical"
-  else: "is-dark"

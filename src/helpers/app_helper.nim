@@ -93,3 +93,11 @@ proc ago*(fromTime: DateTime): string =
   if rem < (9 * monthMinutes): return "over " & yr.pluralize("year") & " ago"
   yr.inc
   "almost " & yr.pluralize("year") & " ago"
+
+proc severityColorClass*(severity: string): string {.inline.} =
+  result = case severity:
+  of "LOW": "is-severity-low"
+  of "MEDIUM": "is-severity-medium"
+  of "HIGH": "is-severity-high"
+  of "CRITICAL": "is-severity-critical"
+  else: "is-dark"

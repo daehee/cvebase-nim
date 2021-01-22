@@ -1,8 +1,12 @@
+import std/[strformat]
+
 import
   karax/[karaxdsl, vdom, vstyles],
   prologue
 
-import ../models/pagination
+import
+  ../models/[cve, pagination],
+  ../helpers/app_helper
 
 type
   HeroVNode* = distinct VNode
@@ -156,3 +160,11 @@ proc renderHero*(title: string): HeroVNode =
         h1(class="title is-2"):
           text title
   hero.HeroVNode # Explicit type conversion to distinct type
+
+proc renderCvssTag*(cvss3: Cvss3): VNode =
+  let colorClass = severityColorClass(cvss3.severity)
+  buildHtml():
+    tdiv(class="card-header-icon"):
+      tdiv(class="tags"):
+        span(class = &"tag {colorClass}"):
+          text cvss3.score

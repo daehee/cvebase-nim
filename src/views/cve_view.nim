@@ -171,13 +171,6 @@ proc renderCve*(ctx: Context, cve: Cve): VNode =
                         italic(class="fas fa-external-link-square-alt")
         ctx.renderSidebar(cve)
 
-proc renderCvssTag(cvss3: Cvss3): VNode =
-  let colorClass = severityColorClass(cvss3.severity)
-  buildHtml():
-    tdiv(class="card-header-icon"):
-      tdiv(class="tags"):
-        span(class = &"tag {colorClass}"):
-          text cvss3.score
 
 proc renderCveCard(ctx: Context, cve:Cve): VNode =
   let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
