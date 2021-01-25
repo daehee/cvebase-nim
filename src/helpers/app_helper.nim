@@ -1,6 +1,13 @@
 ## Common and reusable code for views
 import uri, strutils, times, strformat, math
 
+import prologue/core/[context, request]
+
+
+const baseUrl = "https://www.cvebase.com"
+
+proc canonicalUrl*(ctx: Context): string =
+  return baseUrl & ctx.request.path
 
 proc peekOutlink*(url: string): string =
   let parsed = parseUri(url)

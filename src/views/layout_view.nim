@@ -20,6 +20,7 @@ proc renderHead*(ctx: Context): VNode =
       text ctx.ctxData.getOrDefault("title")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     meta(name = "description", content = ctx.ctxData.getOrDefault("description"))
+    link(rel = "canonical", href = ctx.canonicalUrl)
     link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
     script(src="public/js/jquery-3.5.1.min.js")
     script(src="public/js/app.js")
@@ -37,9 +38,7 @@ proc renderHead*(ctx: Context): VNode =
       </script>
       """
       verbatim gaScript
-    # TODO add canonical
     # TODO add og and twitter meta tags
-    # TODO add application javascript
 
 proc renderNavBar*(): VNode =
   buildHtml():
