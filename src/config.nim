@@ -24,7 +24,7 @@ proc configureApp*(): Config =
     port: getEnv("PORT", "6969").parseInt(),
     useHttps: getEnv("PLG_HTTPS", "false").parseBool(),
     appName: getEnv("PLG_APPNAME", "cvebase"),
-    debug: getEnv("DEBUG", "true").parseBool(),
+    debug: getEnv("DEBUG", "false").parseBool(),
     hostname: getEnv("PLG_HOSTNAME", "cvebase.com"),
     staticDir: getEnv("PLG_STATICDIR", "/public"),
     secretKey: getEnv("PLG_SECRET", "s3cret"), # TODO Update this
