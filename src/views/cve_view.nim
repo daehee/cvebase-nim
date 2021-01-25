@@ -147,16 +147,17 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                   text "Improve Advisory"
             h3():
               text "Proof-of-Concept Exploits"
-            details():
-              summary():
-                text &"View list ({cve.pocsCount})"
-              ul(id="pocs"):
-                for url in cve.pocs.map(proc(x: Poc): string = x.url):
-                  li:
-                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
-                      verbatim peekOutlink(url)
-                      span(class="icon has-text-grey-light is-size-6"):
-                        italic(class="fas fa-external-link-square-alt")
+            if cve.pocsCount > 0:
+              details():
+                summary():
+                  text &"View list ({cve.pocsCount})"
+                ul(id="pocs"):
+                  for url in cve.pocs.map(proc(x: Poc): string = x.url):
+                    li:
+                      a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
+                        verbatim peekOutlink(url)
+                        span(class="icon has-text-grey-light is-size-6"):
+                          italic(class="fas fa-external-link-square-alt")
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/"):
                 span(class="icon"):

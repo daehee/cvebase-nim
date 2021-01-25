@@ -41,5 +41,6 @@ type
 
 proc titleTag*(cve: Cve): string =
   result = cve.cveId
-  let exploits = cve.pocsCount.pluralize("PoC Exploit")
-  result.add &" ({exploits} Available)"
+  if cve.pocsCount > 0:
+    let exploits = cve.pocsCount.pluralize("PoC Exploit")
+    result.add &" ({exploits} Available)"
