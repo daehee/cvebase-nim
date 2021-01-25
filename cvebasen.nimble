@@ -14,7 +14,7 @@ requires "nim >= 1.4.2"
 requires "jester >= 0.5.0"
 requires "karax >= 1.2.1"
 requires "sass#e683aa1"
-requires "prologue" # FIXME: May need to make this my own dev branch
+requires "prologue"
 requires "markdown#head"
 
 # Tasks
@@ -33,8 +33,11 @@ task release, "Build a production release":
 task scss, "Generate css":
   exec "nim c --hint[Processing]:off -r tools/gencss"
 
-task server, "Run server":
-  exec "nim c -r src/cvebasen.nim"
+task dev, "Build a dev release":
+  exec "nim c -d:usestd --outdir:./tmp src/cvebasen.nim"
+
+task server, "Run server in dev mode":
+  exec "nim c -d:usestd --outdir:./tmp -r src/cvebasen.nim"
 
 task testdb, "Test db":
   exec "nim c -r tests/tdb.nim"
