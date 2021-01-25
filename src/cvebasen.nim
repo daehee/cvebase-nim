@@ -8,7 +8,7 @@ import
 import
   globals,
   config,
-  controllers/[cve_ctrl, researcher_ctrl]
+  controllers/[cve_ctrl, researcher_ctrl, error_ctrl]
 from db/pg import newAsyncPool
 
 
@@ -64,10 +64,6 @@ let
     pattern("/", redirectCNVD, @[HttpGet]),
   ]
 
-
-proc go404*(ctx: Context) {.async.} =
-  ## Custom 404 error handler
-  resp "Looks like you took a wrong turn somewhere.", Http404
 
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(cveRoutes, "/cve")
