@@ -96,12 +96,6 @@ proc renderFooter*(): VNode =
               li():
                 a(href="/bugbounty"):
                   text "Bug Bounty Disclosures"
-              li():
-                a(href="/cve/tag/jaeles"):
-                  text "CVE Detection Signatures"
-              li():
-                a(href="/cnvd/2020"):
-                  text "China Vulnerabilities"
         tdiv(class="column")
         tdiv(class="column"):
           aside(class="menu"):
