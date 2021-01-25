@@ -22,10 +22,22 @@ proc renderHead*(ctx: Context): VNode =
     meta(name = "description", content = ctx.ctxData.getOrDefault("description"))
     link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
     script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
+    # when defined(release):
+    let gaScript = """
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-180163190-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-180163190-1');
+    </script>
+    """
+    verbatim gaScript
     # TODO add canonical
     # TODO add og and twitter meta tags
     # TODO add application javascript
-    # TODO add google analytics
 
 proc renderNavBar*(): VNode =
   buildHtml(nav(class = "main-nav navbar is-black is-spaced", style = "border: none".toCss)):

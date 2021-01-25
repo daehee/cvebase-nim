@@ -286,3 +286,32 @@ proc renderCveIndex*(ctx: Context, pgn: Pagination, allyears: seq[int]): VNode =
             ctx.renderPagination(pgn, "cveIndex", @[])
           tdiv(class="column is-2"):
             ctx.renderCveDateSidebar((year: "", monthNum: ""), allYears, newSeq[int]())
+
+proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
+  buildHtml():
+    section(class="section",id="pocs-index"):
+      tdiv(class="container is-desktop"):
+        tdiv(class="columns is-variable is-1-mobile is-2-tablet is-4-desktop is-8-widescreen is-8-fullhd"):
+          tdiv(class="column is-4"):
+            h2(class="title is-size-4"):
+              text "Top CVEs by Exploits"
+            table(class="table is-fullwidth"):
+              tbody():
+                for i, cve in leaders.pairs():
+                  tr():
+                    td():
+                      span(class="has-text-grey-light"):
+                        text $(i + 1)
+                    td:
+                      a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+                        text cve.cveId
+                    if cve.cvss3.isSome():
+                      td():
+                        renderCvssTag(cve.cvss3.get())
+          br()
+          tdiv(class="column"):
+            h2(class="title is-size-4"):
+              text "Latest CVE Exploit Activity"
+            tdiv(class="columns is-multiline"):
+              for cve in activity:
+                ctx.renderCveCard(cve)

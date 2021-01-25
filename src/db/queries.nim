@@ -125,6 +125,13 @@ const
   ORDER BY published_date DESC LIMIT 10""".unindent.replace("\n", " "))
 #  researchersInQuery = sql("""select id, alias, name from researchers where id in ({})""")
 
+  pocLeaderboardQuery = sql(selectCvesIndexFields & """ from cves
+  order by cve_pocs_count desc nulls last limit 25""")
+
+  pocActivityQuery = sql(selectCvesIndexFields & """ from cves
+  where cves.id in
+  (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
+
 proc questionify*(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
   repeat("?,", (n - 1)) & "?"
@@ -264,3 +271,13 @@ proc getResearchersCveActivity*(db: AsyncPool): Future[seq[ResearcherCve]] {.asy
     let match = rows2.filterIt(it[0] == item.researcherId)[0]
     result[i].alias = match[1]
     result[i].name = match[2]
+
+proc getPocLeaderboard*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+  let rows = await db.rows(pocLeaderboardQuery, @[])
+  for item in rows:
+    result.add parseCveRow(item)
+
+proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+  let rows = await db.rows(pocActivityQuery, @[])
+  for item in rows:
+    result.add parseCveRow(item)

@@ -41,12 +41,6 @@ let
 var app = newApp(settings = settings, startup = @[loggerEvent])
 
 # Initialize routes
-# /
-# /cve
-# /poc
-# /researcher
-# /bugbounty
-# /lab
 
 proc redirectCNVD(ctx: Context) {.async.} =
   resp redirect("/cve")
@@ -62,6 +56,9 @@ let
     pattern("/{alias}", showResearcher, @[HttpGet], "researcher"),
     pattern("/", showResearcherIndex, @[HttpGet], "researcherIndex"),
   ]
+  pocRoutes* = @[
+    pattern("/", showPocIndex, @[HttpGet], "pocIndex"),
+  ]
   cnvdRoutes* = @[
     pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),
     pattern("/", redirectCNVD, @[HttpGet]),
@@ -75,6 +72,7 @@ proc go404*(ctx: Context) {.async.} =
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(cveRoutes, "/cve")
 app.addRoute(researcherRoutes, "/researcher")
+app.addRoute(pocRoutes, "/poc")
 app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
 app.registerErrorHandler(Http404, go404)
 app.run()

@@ -147,3 +147,12 @@ proc showCveIndex*(ctx: Context) {.async.} =
   ctx.ctxData["description"] = &"Check out the latest CVE vulnerabilities the infosec community is talking about."
 
   resp ctx.renderMain(ctx.renderCveIndex(pgn, allYears), renderHero(&"Trending CVEs for {month} {day}"))
+
+proc showPocIndex*(ctx: Context) {.async.} =
+  let leaders = await db.getPocLeaderboard()
+  let activity = await db.getCvesPocActivity()
+
+  ctx.ctxData["title"] = &"Top CVEs with Proof-of-Concept Exploits"
+  ctx.ctxData["description"] = &"Top-Ranked CVE Vulnerabilities with Open-Source Proof-of-Concept Exploits"
+
+  resp ctx.renderMain(ctx.renderPocIndex(leaders, activity))
