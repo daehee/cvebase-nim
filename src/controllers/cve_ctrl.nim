@@ -22,6 +22,7 @@ proc showCve*(ctx: Context) {.async.} =
   var year, seq: int
   try:
     year = parseInt(ctx.getPathParams("year"))
+    seq = parseInt(ctx.getPathParams("sequence"))
   except:
     respDefault Http404
     return
@@ -29,7 +30,6 @@ proc showCve*(ctx: Context) {.async.} =
   if not year.isValidYear():
     respDefault Http404
     return
-  seq = parseInt(ctx.getPathParams("sequence"))
 
   try:
     let cve = await db.getCveBySequence(year, seq)
