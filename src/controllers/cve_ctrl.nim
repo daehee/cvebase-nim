@@ -156,3 +156,22 @@ proc showPocIndex*(ctx: Context) {.async.} =
   ctx.ctxData["description"] = &"Top-Ranked CVE Vulnerabilities with Open-Source Proof-of-Concept Exploits"
 
   resp ctx.renderMain(ctx.renderPocIndex(leaders, activity))
+
+proc showProduct*(ctx: Context) {.async.} =
+  let slug = ctx.getPathParams("slug")
+  try:
+    let product = await db.getProduct(slug)
+    # <Product> Vulnerabilities (<Num> CVEs)
+    ctx.ctxData["title"] = &"{product.name} Vulnerabilities (CVEs)"
+    # <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
+#    ctx.ctxData["description"] =
+    let cves = newSeq[Cve]()
+    let heroTitle = &"{product.name} Vulnerabilities"
+
+    resp ctx.renderMain(ctx.renderProduct(cves), renderHero(heroTitle))
+  except NotFoundException:
+    respDefault Http404
+    return
+  except PGError:
+    respDefault Http404
+    return

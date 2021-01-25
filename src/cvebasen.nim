@@ -44,11 +44,12 @@ var app = newApp(settings = settings, startup = @[loggerEvent])
 
 # Initialize routes
 
-proc redirectCNVD(ctx: Context) {.async.} =
+proc redirectToCve(ctx: Context) {.async.} =
   resp redirect("/cve")
 
 let
   cveRoutes* = @[
+#    pattern("/tag/{tag}", redirectToCve, @[HttpGet], "cveTag"),
     pattern("/{year}/m/{month}", showCveMonth, @[HttpGet], "cveMonth"),
     pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
@@ -61,15 +62,19 @@ let
   pocRoutes* = @[
     pattern("/", showPocIndex, @[HttpGet], "pocIndex"),
   ]
+  productRoutes* = @[
+    pattern("/{slug}", showProduct, @[HttpGet], "product"),
+  ]
   cnvdRoutes* = @[
-    pattern("/{year}/{sequence}", redirectCNVD, @[HttpGet]),
-    pattern("/", redirectCNVD, @[HttpGet]),
+    pattern("/{year}/{sequence}", redirectToCve, @[HttpGet]),
+    pattern("/", redirectToCve, @[HttpGet]),
   ]
 
 
 app.use(staticFileMiddleware(cfg.staticDir))
 app.addRoute(cveRoutes, "/cve")
 app.addRoute(researcherRoutes, "/researcher")
+app.addRoute(productRoutes, "/product")
 app.addRoute(pocRoutes, "/poc")
 app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
 app.registerErrorHandler(Http404, go404)

@@ -132,6 +132,10 @@ const
   where cves.id in
   (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
 
+  productQuery = sql("select id, name from products where slug = ?")
+
+  # SELECT "cves".* FROM "cves" INNER JOIN "cves_products" ON "cves"."id" = "cves_products"."cve_id" WHERE "cves_products"."product_id" = $1 ORDER BY published_date DESC LIMIT $2 OFFSET $3
+
 proc questionify*(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
   repeat("?,", (n - 1)) & "?"
@@ -281,3 +285,8 @@ proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   let rows = await db.rows(pocActivityQuery, @[])
   for item in rows:
     result.add parseCveRow(item)
+
+proc getProduct*(db: AsyncPool, slug: string): Future[Product] {.async.} =
+  let rows = await db.rows(productQuery, @[slug])
+  let data = rows[0]
+  result = Product(id: data[0], name: data[1])

@@ -316,3 +316,8 @@ proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
             tdiv(class="columns is-multiline"):
               for cve in activity:
                 ctx.renderCveCard(cve)
+
+proc renderProduct*(ctx: Context, cves: seq[Cve]): VNode =
+  buildHtml():
+    p:
+      text "yeet"
