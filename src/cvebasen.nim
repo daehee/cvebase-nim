@@ -1,4 +1,4 @@
-import std/[logging, uri, strutils]
+import std/[logging, uri, strutils, strformat]
 
 # prologue framework imports
 import
@@ -17,7 +17,9 @@ var cfg {.threadvar.}: config.Config
 proc dbConnect*(connStr: string) =
   let uri = parseUri(connStr)
   # TODO: Make num of pool connections a config var
-  db = newAsyncPool(uri.hostname, uri.username, uri.password, strip(uri.path, chars={'/'}), 20)
+  let database = strip(uri.path, chars={'/'})
+  let connKV = &"user = {uri.username} password = {uri.password} host = {uri.hostname} port = {uri.port} dbname = {database} sslmode = require"
+  db = newAsyncPool("", "", "", connKV, 20)
 
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
