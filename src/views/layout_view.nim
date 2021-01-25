@@ -42,33 +42,36 @@ proc renderHead*(ctx: Context): VNode =
     # TODO add application javascript
 
 proc renderNavBar*(): VNode =
-  buildHtml(nav(class = "main-nav navbar is-black is-spaced", style = "border: none".toCss)):
-    tdiv(class="container"):
-      tdiv(class="navbar-brand"):
-        tdiv(aria-label="menu",role="button",aria-expanded="false",class="navbar-burger burger"):
-          span(aria-hidden="true")
-          span(aria-hidden="true")
-          span(aria-hidden="true")
-      tdiv(class="navbar-menu",id="navbarMenuIndex"):
-        tdiv(class="navbar-start"):
-          tdiv(class="navbar-item")
-        tdiv(class="navbar-end"):
-          a(class="navbar-item",href="/cve"):
-            text "CVEs"
-          a(class="navbar-item",href="/researcher"):
-            text "Researchers"
-          a(class="navbar-item",href="/poc"):
-            text "PoC Exploits"
-          a(class="navbar-item",href="/bugbounty"):
-            text "Bug Bounties"
-          a(class="navbar-item",href="/lab"):
-            text "Learn"
-          a(target="_blank",class="navbar-item",href="https://github.com/cvebase/cvebase.com"):
-            span(class="icon"):
-              italic(class="fab fa-github")
-          a(target="_blank",class="navbar-item",href="https://twitter.com/cvebase"):
-            span(class="icon"):
-              italic(class="fab fa-twitter")
+  buildHtml():
+    nav(class = "main-nav navbar is-black is-spaced", style = "border: none".toCss):
+      tdiv(class="container"):
+        tdiv(class="navbar-brand"):
+          a(href="/", class="navbar-item"):
+            img(src="/public/images/cvebase.png", style = "max-height: 2.5rem".toCss)
+          tdiv(aria-label="menu",role="button",aria-expanded="false",class="navbar-burger burger"):
+            span(aria-hidden="true")
+            span(aria-hidden="true")
+            span(aria-hidden="true")
+        tdiv(class="navbar-menu",id="navbarMenuIndex"):
+          tdiv(class="navbar-start"):
+            tdiv(class="navbar-item")
+          tdiv(class="navbar-end"):
+            a(class="navbar-item",href="/cve"):
+              text "CVEs"
+            a(class="navbar-item",href="/researcher"):
+              text "Researchers"
+            a(class="navbar-item",href="/poc"):
+              text "PoC Exploits"
+            a(class="navbar-item",href="/bugbounty"):
+              text "Bug Bounties"
+            a(class="navbar-item",href="/lab"):
+              text "Learn"
+            a(target="_blank",class="navbar-item",href="https://github.com/cvebase/cvebase.com"):
+              span(class="icon"):
+                italic(class="fab fa-github")
+            a(target="_blank",class="navbar-item",href="https://twitter.com/cvebase"):
+              span(class="icon"):
+                italic(class="fab fa-twitter")
 
 proc renderFooter*(): VNode =
   buildHtml(footer(class = "footer")):
