@@ -34,6 +34,7 @@ type
     id*: string # primary key from db
     name*: string
     uriShort*: string
+    slug*: string
 
   Vendor* = object
     name*: string

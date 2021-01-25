@@ -133,6 +133,7 @@ const
   (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
 
   productQuery = sql("select id, name from products where slug = ?")
+  productByIdQuery = sql("select slug from products where id = ?")
 
   # SELECT "cves".* FROM "cves" INNER JOIN "cves_products" ON "cves"."id" = "cves_products"."cve_id" WHERE "cves_products"."product_id" = $1 ORDER BY published_date DESC LIMIT $2 OFFSET $3
 
@@ -288,5 +289,18 @@ proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
 
 proc getProduct*(db: AsyncPool, slug: string): Future[Product] {.async.} =
   let rows = await db.rows(productQuery, @[slug])
+
+  if len(rows) == 0:
+    raise newException(NotFoundException, &"Product {slug} not found")
+
   let data = rows[0]
   result = Product(id: data[0], name: data[1])
+
+proc getProductById*(db: AsyncPool, id: int): Future[Product] {.async.} =
+  let rows = await db.rows(productByIdQuery, @[$id])
+
+  if len(rows) == 0:
+    raise newException(NotFoundException, &"Product id {id} not found")
+
+  let data = rows[0]
+  result = Product(slug: data[0])

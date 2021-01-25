@@ -159,19 +159,37 @@ proc showPocIndex*(ctx: Context) {.async.} =
 
 proc showProduct*(ctx: Context) {.async.} =
   let slug = ctx.getPathParams("slug")
+  var product: Product
   try:
-    let product = await db.getProduct(slug)
-    # <Product> Vulnerabilities (<Num> CVEs)
-    ctx.ctxData["title"] = &"{product.name} Vulnerabilities (CVEs)"
-    # <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
-#    ctx.ctxData["description"] =
-    let cves = newSeq[Cve]()
-    let heroTitle = &"{product.name} Vulnerabilities"
-
-    resp ctx.renderMain(ctx.renderProduct(cves), renderHero(heroTitle))
+    product = await db.getProduct(slug)
   except NotFoundException:
-    respDefault Http404
-    return
+    # if param converts to int, try fallback to id instead of slug
+    var tmpId: int
+    try:
+      tmpId = parseInt(slug)
+    except ValueError:
+      respDefault Http404
+      return
+
+    try:
+      # if found, redirect to slug
+      product = await db.getProductById(tmpId)
+      resp redirect(&"/product/{product.slug}")
+      return
+    except NotFoundException:
+      respDefault Http404
+      return
   except PGError:
     respDefault Http404
     return
+
+  # get related Cves
+
+  # <Product> Vulnerabilities (<Num> CVEs)
+  ctx.ctxData["title"] = &"{product.name} Vulnerabilities (CVEs)"
+  # <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
+#    ctx.ctxData["description"] =
+  let cves = newSeq[Cve]()
+  let heroTitle = &"{product.name} Vulnerabilities"
+
+  resp ctx.renderMain(ctx.renderProduct(cves), renderHero(heroTitle))

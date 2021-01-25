@@ -22,8 +22,8 @@ proc renderHead*(ctx: Context): VNode =
     meta(name = "description", content = ctx.ctxData.getOrDefault("description"))
     link(rel = "canonical", href = ctx.canonicalUrl)
     link(rel="stylesheet", type="text/css", href="/public/css/style.css?v=3")
-    script(src="public/js/jquery-3.5.1.min.js")
-    script(src="public/js/app.js")
+    script(src="/public/js/jquery-3.5.1.min.js")
+    script(src="/public/js/app.js")
     script(src="https://kit.fontawesome.com/007fa0d61e.js", data-mutate-approach="sync")
     when defined(release):
       let gaScript = """
