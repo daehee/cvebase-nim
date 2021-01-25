@@ -22,8 +22,8 @@ proc dbConnect*(connStr: string) =
 proc setLoggingLevel() =
   addHandler(newConsoleLogger())
   # when defined(release):
-  # logging.setLogFilter(lvlAll)
-  logging.setLogFilter(lvlError)
+  logging.setLogFilter(lvlAll)
+  #logging.setLogFilter(lvlError)
 
 cfg = configureApp()
 dbConnect(cfg.dbUrl)
