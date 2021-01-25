@@ -66,6 +66,8 @@ const
   resultsPerPage = 10
 
   selectCvesIndexFields = "select id, cve_id, year, sequence, published_date, data, cve_pocs_count"
+  selectCvesJoinsFields = "select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count"
+
   cveBySequenceQuery = sql(selectCvesIndexFields & ", wiki_data, cwe_id from cves where year = ? and sequence = ?")
 
   cvesByYearQuery = sql((selectCvesIndexFields & """ from cves
@@ -104,10 +106,10 @@ const
     website, twitter, github, linkedin, hackerone, bugcrowd
     from researchers where slug = ?""")
 
-  researcherCvesQuery  = sql("""select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count from cves
+  researcherCvesQuery  = sql((selectCvesJoinsFields & """ from cves
   INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
   where cves_researchers.researcher_id = ?
-  order by published_date desc limit 10 offset ?""".unindent.replace("\n", " "))
+  order by published_date desc limit 10 offset ?""").unindent.replace("\n", " "))
   researcherCvesCountQuery = sql("""select count(*) FROM cves
   INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
   WHERE cves_researchers.researcher_id = ?""".unindent.replace("\n", " "))
@@ -132,10 +134,17 @@ const
   where cves.id in
   (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
 
-  productQuery = sql("select id, name from products where slug = ?")
+  productQuery = sql("select id, name, slug from products where slug = ?")
   productByIdQuery = sql("select slug from products where id = ?")
 
-  # SELECT "cves".* FROM "cves" INNER JOIN "cves_products" ON "cves"."id" = "cves_products"."cve_id" WHERE "cves_products"."product_id" = $1 ORDER BY published_date DESC LIMIT $2 OFFSET $3
+  cvesProductsJoin = """INNER JOIN cves_products ON cves.id = cves_products.cve_id
+    where cves_products.product_id = ?"""
+
+  productCvesQuery  = sql((selectCvesJoinsFields & " from cves " &
+    cvesProductsJoin & " order by published_date desc limit 10 offset ?").unindent.replace("\n", " "))
+
+  productCvesCountQuery = sql("select count(*) FROM cves " & cvesProductsJoin)
+
 
 proc questionify*(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
@@ -169,7 +178,8 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 
 template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =
   ## Injects offset and count variables for paginated queries
-  let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
+#  let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
+  let offset {.inject} = (page - 1) * resultsPerPage
   let countResult = await db.rows(countQuery, countParams)
   let count {.inject.} = parseInt(countResult[0][0])
   # TODO: Error if invalid page number i.e. page > pages available
@@ -294,7 +304,7 @@ proc getProduct*(db: AsyncPool, slug: string): Future[Product] {.async.} =
     raise newException(NotFoundException, &"Product {slug} not found")
 
   let data = rows[0]
-  result = Product(id: data[0], name: data[1])
+  result = Product(id: parseInt(data[0]), name: data[1], slug: data[2])
 
 proc getProductById*(db: AsyncPool, id: int): Future[Product] {.async.} =
   let rows = await db.rows(productByIdQuery, @[$id])
@@ -304,3 +314,10 @@ proc getProductById*(db: AsyncPool, id: int): Future[Product] {.async.} =
 
   let data = rows[0]
   result = Product(slug: data[0])
+
+proc getProductCves*(db: AsyncPool, pId: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
+  paginateQuery(productCvesCountQuery, @[$pId], page)
+  let rows = await db.rows(productCvesQuery, @[$pId, $offset])
+  result = newPagination[Cve](productCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
+  for item in rows:
+    result.items.add parseCveRow(item)

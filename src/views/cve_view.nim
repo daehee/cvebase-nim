@@ -317,7 +317,14 @@ proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
               for cve in activity:
                 ctx.renderCveCard(cve)
 
-proc renderProduct*(ctx: Context, cves: seq[Cve]): VNode =
+proc renderProduct*(ctx: Context, product: Product, pgn: Pagination[Cve]): VNode =
   buildHtml():
-    p:
-      text "yeet"
+    section(class="section"):
+      tdiv(class="container is-widescreen"):
+        tdiv(class="columns"):
+          tdiv(class="column"):
+            tdiv(class="columns is-multiline"):
+              for cve in pgn.items:
+                ctx.renderCveCard(cve)
+            hr()
+            ctx.renderPagination(pgn, "product", {"slug": product.slug})

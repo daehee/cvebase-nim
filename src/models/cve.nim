@@ -31,7 +31,7 @@ type
 
   # TODO split into own model files
   Product* = object
-    id*: string # primary key from db
+    id*: int # primary key from db
     name*: string
     uriShort*: string
     slug*: string

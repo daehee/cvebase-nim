@@ -1,7 +1,7 @@
 # Simple async driver for postgress
 # https://github.com/treeform/pg
 
-import asyncdispatch
+import asyncdispatch, logging, strformat
 include db_postgres
 
 type
@@ -43,6 +43,9 @@ proc rows*(
   args: seq[string]): Future[seq[Row]] {.async.} =
   ## Runs the SQL getting results.
   assert db.status == CONNECTION_OK
+
+  logging.debug query.string & &" {args}"
+
   let success = pqsendQuery(db, dbFormat(query, args))
   if success != 1: dbError(db) # never seen to fail when async
   while true:

@@ -159,6 +159,7 @@ proc showPocIndex*(ctx: Context) {.async.} =
 
 proc showProduct*(ctx: Context) {.async.} =
   let slug = ctx.getPathParams("slug")
+
   var product: Product
   try:
     product = await db.getProduct(slug)
@@ -183,13 +184,19 @@ proc showProduct*(ctx: Context) {.async.} =
     respDefault Http404
     return
 
+  let pageParam = ctx.getQueryParams("page")
+  var pgn: Pagination[Cve]
   # get related Cves
+  if pageParam != "":
+    let pageNum = parseInt(pageParam)
+    pgn = await db.getProductCves(product.id, pageNum)
+  else:
+    pgn = await db.getProductCves(product.id)
 
   # <Product> Vulnerabilities (<Num> CVEs)
   ctx.ctxData["title"] = &"{product.name} Vulnerabilities (CVEs)"
   # <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
 #    ctx.ctxData["description"] =
-  let cves = newSeq[Cve]()
   let heroTitle = &"{product.name} Vulnerabilities"
 
-  resp ctx.renderMain(ctx.renderProduct(cves), renderHero(heroTitle))
+  resp ctx.renderMain(ctx.renderProduct(product, pgn), renderHero(heroTitle))
