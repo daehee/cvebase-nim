@@ -17,6 +17,8 @@ type
     wiki*: JsonNode
     pocsCount*: int
     products*: Option[seq[Product]]
+    hacktivities*: Option[seq[Hacktivity]]
+#    researchers*: Option[seq[Researcher]]
 
   Cvss3* = object
     score*: string
@@ -40,6 +42,17 @@ type
   Vendor* = object
     name*: string
     products*: seq[Product]
+
+  Hacktivity* = object
+    id*: string # primary key from db
+    title*: string
+    researcher*: string
+    url*: string
+    vendor*: string
+    vendorHandle*: string
+    submittedAt*: DateTime
+    disclosedAt*: DateTime
+    cve*: Cve
 
 
 proc titleTag*(cve: Cve): string =

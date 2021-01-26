@@ -155,6 +155,13 @@ const
 
   cveProductsQuery = sql("select name, slug from products inner join cves_products cp on products.id = cp.product_id where cp.cve_id = ?")
 
+  # hacktivities
+  joinHacktivitiesCves = """hacktivities inner join cves_hacktivities ch on hacktivities.id = ch.hacktivity_id
+    inner join cves c on ch.cve_id = c.id"""
+  hacktivitiesQuery = sql(("select distinct hacktivities.id, title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed from " &
+    joinHacktivitiesCves & " order by disclosed desc limit 10 offset ?"))
+  hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
+
 
 proc questionify*(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
@@ -334,3 +341,34 @@ proc getProductCves*(db: AsyncPool, pId: int; page: int = 1): Future[Pagination[
   result = newPagination[Cve](productCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
+
+proc parseHacktivity(rows: seq[Row]): seq[Hacktivity] =
+  for row in rows:
+    result.add Hacktivity(
+      id: row[0],
+      title: row[1],
+      researcher: row[2],
+      url: row[3],
+      vendor: row[4],
+      vendorHandle: row[5],
+      submitted_at: parsePgDateTime(row[6]),
+      disclosed_at: parsePgDateTime(row[7]),
+    )
+
+proc getHacktivities*(db: AsyncPool, page: int = 1): Future[Pagination[Hacktivity]] {.async.} =
+  paginateQuery(hacktivitiesCountQuery, @[], page)
+  let rows = await db.rows(hacktivitiesQuery, @[$offset])
+  result = newPagination[Hacktivity](hacktivitiesQuery, page, resultsPerPage, count, newSeq[Hacktivity]())
+  # first append hacktivity objects
+  result.items = parseHacktivity(rows)
+  # query basic cve data to append to Hacktivity objects
+  let hacktivityIds = result.items.mapIt(it.id)
+
+  let qNum = questionify(hacktivityIds.len)
+  let cvesInQuery = sql((selectCvesJoinsFields & &", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in ({qNum})"))
+  let rows2 = await db.rows(cvesInQuery, hacktivityIds)
+
+  for i, item in result.items.pairs:
+    # match cve query results by hacktivity id
+    let match = rows2.filterIt(it[7] == item.id)[0] # take first
+    result.items[i].cve = Cve(cveId: match[1], year: parseInt(match[2]), sequence: parseInt(match[3]))

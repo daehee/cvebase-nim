@@ -329,13 +329,49 @@ proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
                 ctx.renderCveCard(cve)
 
 proc renderProduct*(ctx: Context, product: Product, pgn: Pagination[Cve]): VNode =
-  buildHtml():
+  buildhtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
             tdiv(class="columns is-multiline"):
               for cve in pgn.items:
-                ctx.renderCveCard(cve)
+                ctx.rendercvecard(cve)
             hr()
             ctx.renderPagination(pgn, "product", {"slug": product.slug})
+
+proc renderHacktivities*(ctx: Context, pgn: Pagination[Hacktivity]): VNode =
+  buildhtml():
+    section(class="section"):
+      tdiv(class="container is-widescreen"):
+        tdiv(class="columns"):
+          tdiv(class="column"):
+            tdiv(class="columns is-multiline"):
+              for hacktivity in pgn.items:
+                let linkToCve = ctx.urlFor("cve", {"year": $hacktivity.cve.year, "sequence": $hacktivity.cve.sequence})
+                tdiv(class="column is-half"):
+                  tdiv(class="card"):
+                    header(class="card-header"):
+                      p(class="card-header-title"):
+                        a(class = "has-text-primary-light is-size-5", href = linkToCve):
+                          text hacktivity.cve.cveId
+#                      tdiv(class="card-header-icon"):
+#                        if hacktivity.cve.cvss3.isSome():
+#                          renderCvssTag(hacktivity.cve.cvss3.get())
+                    tdiv(class="card-content has-background-black"):
+                      tdiv(class="content"):
+                        p:
+                          text &"{hacktivity.vendor}: {hacktivity.title}"
+                        p:
+                          small(class="has-text-grey-light"):
+                            text &"submitted by {hacktivity.researcher} {hacktivity.submittedAt.ago}"
+                          br()
+                          small(class="has-text-grey-light"):
+                            text &"publicly disclosed {hacktivity.disclosedAt.ago}"
+                      tdiv(class="buttons"):
+                        a(class = "button is-small", href = linkToCve):
+                          text "view CVE"
+                        a(class = "button is-small", href = ""):
+                          text "read report"
+            hr()
+            ctx.renderPagination(pgn, "hacktivityIndex", @[])

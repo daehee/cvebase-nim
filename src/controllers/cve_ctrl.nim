@@ -193,10 +193,29 @@ proc showProduct*(ctx: Context) {.async.} =
   else:
     pgn = await db.getProductCves(product.id)
 
-  # <Product> Vulnerabilities (<Num> CVEs)
+  # TODO: <Product> Vulnerabilities (<Num> CVEs)
   ctx.ctxData["title"] = &"{product.name} Vulnerabilities (CVEs)"
-  # <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
+  # TODO: <Num> CVEs are published for <Product> by <Vendor>. Browse vulnerability data and PoC exploits for <Product>.
 #    ctx.ctxData["description"] =
   let heroTitle = &"{product.name} Vulnerabilities"
 
   resp ctx.renderMain(ctx.renderProduct(product, pgn), renderHero(heroTitle))
+
+# TODO: DRY
+#proc getCvePagination*(proc signature): Pagination[Cve] {.async.} =
+
+proc showHacktivities*(ctx: Context) {.async.} =
+  let pageParam = ctx.getQueryParams("page")
+  var pgn: Pagination[Hacktivity]
+  # get related Cves
+  if pageParam != "":
+    let pageNum = parseInt(pageParam)
+    pgn = await db.getHacktivities(pageNum)
+  else:
+    pgn = await db.getHacktivities()
+
+  ctx.ctxData["title"] = "Bug Bounty CVE Vulnerabilities"
+  ctx.ctxData["description"] = "How security researchers are making money with bug bounties from CVE vulnerabilities"
+
+  let heroTitle = "CVEs in Bug Bounty"
+  resp ctx.renderMain(ctx.renderHacktivities(pgn), renderHero(heroTitle))

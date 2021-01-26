@@ -97,7 +97,10 @@ suite "db tests":
     block:
       let res = waitFor db.getResearchersCveActivity()
       check len(res) == 10
-#      for item in res:
-#        echo &"{item.alias} {item.cve.cveId}"
+
+  test "getHacktivities":
+    block:
+      let res = waitFor db.getHacktivities()
+      check len(res.items) == 10
 
   waitFor db.close()
