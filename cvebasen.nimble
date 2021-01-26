@@ -26,6 +26,7 @@ task release, "Build a production release":
   --define:release
   --define:ssl
   --define:usestd
+  --define:logueRouteLoose
   --hints:off
   --outdir:"."
   setCommand "c", "src/cvebasen.nim"
@@ -34,10 +35,10 @@ task scss, "Generate css":
   exec "nim c --hint[Processing]:off -r tools/gencss"
 
 task dev, "Build a dev release":
-  exec "nim c -d:usestd -d:ssl --outdir:./tmp src/cvebasen.nim"
+  exec "nim c -d:usestd -d:ssl -d:logueRouteLoose --outdir:./tmp src/cvebasen.nim"
 
 task server, "Run server in dev mode":
-  exec "nim c -d:usestd -d:ssl --outdir:./tmp -r src/cvebasen.nim"
+  exec "nim c -d:usestd -d:ssl -d:logueRouteLoose --outdir:./tmp -r src/cvebasen.nim"
 
 task testdb, "Test db":
   exec "nim c -r tests/tdb.nim"

@@ -49,7 +49,7 @@ proc redirectToCve(ctx: Context) {.async.} =
 
 let
   cveRoutes* = @[
-#    pattern("/tag/{tag}", redirectToCve, @[HttpGet], "cveTag"),
+    pattern("/tag/{tag}", redirectToCve, @[HttpGet], "cveTag"),
     pattern("/{year}/m/{month}", showCveMonth, @[HttpGet], "cveMonth"),
     pattern("/{year}/{sequence}", showCve, @[HttpGet], "cve"),
     pattern("/{year}", showCveYear, @[HttpGet], "cveYear"),
