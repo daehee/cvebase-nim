@@ -62,6 +62,14 @@ proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
 proc parseCwe(rows: seq[Row]): Cwe =
   Cwe(name: rows[0][0], description: rows[0][1])
 
+proc parseCveProducts(rows: seq[Row]): Option[seq[Product]] =
+  if len(rows) == 0: return
+  var products = newSeq[Product]()
+  for row in rows:
+    products.add Product(name: row[0], slug: row[1])
+  result = some(products)
+
+
 const
   resultsPerPage = 10
 
@@ -145,6 +153,8 @@ const
 
   productCvesCountQuery = sql("select count(*) FROM cves " & cvesProductsJoin)
 
+  cveProductsQuery = sql("select name, slug from products inner join cves_products cp on products.id = cp.product_id where cp.cve_id = ?")
+
 
 proc questionify*(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
@@ -165,15 +175,18 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   result = parseCveRow(data)
   result.id = parseInt(data[0])  # primary key; field idx 0
 
-  # Relational queries for rest of fields
+  # Append rest of fields; join queries
+  # cwe
   if cweId.len() > 0:
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
-
+  # pocs
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[$result.id]))
-
+  # wiki
   result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
-  if wikiData != "":
+  if wikiData != "": # need to check for null column value
     result.wiki = parseJson(wikiData)
+  # products
+  result.products = parseCveProducts(await db.rows(cveProductsQuery, @[$result.id]))
 
 
 template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =

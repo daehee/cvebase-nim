@@ -15,10 +15,17 @@ from db/pg import newAsyncPool
 var cfg {.threadvar.}: config.Config
 
 proc dbConnect*(connStr: string) =
-  let uri = parseUri(connStr)
+  let
+    uri = parseUri(connStr)
+    database = strip(uri.path, chars={'/'})
+
+  var connKV = &"user = {uri.username} password = {uri.password} host = {uri.hostname} port = {uri.port} dbname = {database}"
+
+  if uri.query == "sslmode=require":
+    connKV.add " sslmode = require"
+
+  # set db global variable
   # TODO: Make num of pool connections a config var
-  let database = strip(uri.path, chars={'/'})
-  let connKV = &"user = {uri.username} password = {uri.password} host = {uri.hostname} port = {uri.port} dbname = {database} sslmode = require"
   db = newAsyncPool("", "", "", connKV, 20)
 
 proc setLoggingLevel() =

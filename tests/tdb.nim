@@ -27,6 +27,14 @@ suite "db tests":
       check cve.cveId == "CVE-2020-29156"
       check not cve.wiki.hasKey("advisory")
 
+    block:
+      let cve = waitFor db.getCveBySequence(2020, 284)
+      check cve.cveId == "CVE-2020-0284"
+      check cve.products.isSome()
+      let products = cve.products.get()
+      check products.len() == 1
+      check products[0].name == "Android"
+
 
   test "CVE Weakness":
     block:

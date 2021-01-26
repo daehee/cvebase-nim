@@ -16,6 +16,7 @@ type
     cwe*: Option[Cwe]
     wiki*: JsonNode
     pocsCount*: int
+    products*: Option[seq[Product]]
 
   Cvss3* = object
     score*: string

@@ -131,6 +131,17 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                     a(href = ctx.urlFor("researcher", {"alias": researcher.alias})):
                       text researcher.name
 
+            # Products
+            if cve.products.isSome():
+              h3:
+                text "Vulnerable Products"
+              ul:
+                let products = cve.products.get()
+                for product in products:
+                  li:
+                    a(href = ctx.urlFor("product", {"slug": product.slug})):
+                      text product.name
+
             h3():
               text "Community Advisory"
             if cve.wiki.hasKey("advisory"):
