@@ -1,20 +1,14 @@
 import std/[json, strutils]
 import karax/[karaxdsl, vdom]
 
-proc urlToLabVendor(url: string): string =
-  if url.contains("pentesterlab"): "PentesterLab"
-  elif url.contains("vulhub"): "Vulhub"
-  elif url.contains("hackthebox"): "Hack The Box"
-  elif url.contains("tryhackme"): "TryHackMe"
-  else: ""
+import ../models/cve
 
-proc renderCveLabButtons*(labsJson: seq[JsonNode]): VNode =
+proc renderCveLabButtons*(labs: seq[Lab]): VNode =
   buildHtml(tdiv(class = "buttons")):
-    for item in labsJson:
-      let url = item.getStr()
-      a(target = "_blank", class = "button is-outlined is-primary", rel = "nofollow", href = url):
+    for lab in labs:
+      a(target = "_blank", class = "button is-outlined is-primary", rel = "nofollow", href = lab.url):
         span(class = "icon"):
           italic(class = "fas fa-flask")
         span:
           # TODO: Stack as numbered collection when duplicate vendors e.g. Vulhub 1, Vulhub 2
-          text urlToLabVendor(url)
+          text lab.vendor

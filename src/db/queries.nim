@@ -60,6 +60,16 @@ proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
   for row in rows:
     result.add Poc(url: row[0])
 
+proc parseLabs(rows: seq[Row]): seq[Lab] =
+  for row in rows:
+    let url = row[0]
+    let vendor = if url.contains("pentesterlab"): "PentesterLab"
+    elif url.contains("vulhub"): "Vulhub"
+    elif url.contains("hackthebox"): "Hack The Box"
+    elif url.contains("tryhackme"): "TryHackMe"
+    else: ""
+    result.add Lab(url: url, vendor: vendor)
+
 proc parseCwe(rows: seq[Row]): Cwe =
   Cwe(name: rows[0][0], description: rows[0][1])
 
@@ -110,6 +120,8 @@ const
   group by month order by month desc""".unindent)
 
   cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
+  cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ?")
+
   cveCweQuery = sql("select name, description from cwes where id = ?")
 
   researcherQuery = sql("""select id, name, alias, nationality, bio, cves_count,
@@ -188,6 +200,8 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
     result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
   # pocs
   result.pocs = parsePocs(await db.rows(cvePocsQuery, @[$result.id]))
+  # labs
+  result.labs = parseLabs(await db.rows(cveLabsQuery, @[$result.id]))
   # wiki
   result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
   if wikiData != "": # need to check for null column value
@@ -227,6 +241,8 @@ proc matchInQuery(inQueryRows: seq[Row], colIdx: int, cmp: string): Row =
   if result.len == 0: raise newException(ValueError, &"no match for {cmp} in inQuery Rows")
 
 proc fieldOption(field: string): Option[string] =
+  ## Converts string to Option.
+  ## Returns none Option if string is empty.
   if field != "": return some(field)
 
 

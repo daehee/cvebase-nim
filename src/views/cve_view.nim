@@ -176,10 +176,10 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                   text "Add PoC"
 
             # Labs
-            if cve.wiki.hasKey("courses"):
+            if len(cve.labs) > 0:
               h3():
                 text "Research Labs"
-              renderCveLabButtons(cve.wiki["courses"].getElems())
+              renderCveLabButtons(cve.labs)
 
             # Hacktivities
             if len(cve.hacktivities) > 0:

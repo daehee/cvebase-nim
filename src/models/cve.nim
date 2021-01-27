@@ -16,6 +16,7 @@ type
     refUrls*: seq[string]
     cvss3*: Option[Cvss3]
     pocs*: seq[Poc]
+    labs*: seq[Lab]
     cwe*: Option[Cwe]
     wiki*: JsonNode
     pocsCount*: int
@@ -33,7 +34,12 @@ type
 
   Poc* = object
     url*: string
+    # TODO: Remove updatedAt?
     updatedAt*: DateTime
+
+  Lab* = object
+    url*: string
+    vendor*: string
 
   Product* = object
     id*: int # primary key from db
