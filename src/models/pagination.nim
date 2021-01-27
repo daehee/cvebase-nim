@@ -8,16 +8,14 @@ type
   # Modeled after Flask Pagination object:
   # https://github.com/pallets/flask-sqlalchemy/blob/330c9f66425c3e0388446acdf4571fd6813f8182/src/flask_sqlalchemy/__init__.py#L308
   Pagination*[T] = object
-    query*: SqlQuery
     page*: int  # current page (1 indexed)
     perPage*: int # results per page
     total*: int
     items*: seq[T]
     # pages: int  # total number of pages
 
-proc newPagination*[T](query: SqlQuery; page, perPage, total: int; items: seq[T]): Pagination[T] =
+proc newPagination*[T](page, perPage, total: int; items: seq[T]): Pagination[T] =
   Pagination[T](
-    query: query,
     page: page,
     perPage: perPage,
     total: total,

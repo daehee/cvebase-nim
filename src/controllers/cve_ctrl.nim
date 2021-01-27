@@ -210,9 +210,9 @@ proc showHacktivities*(ctx: Context) {.async.} =
   # get related Cves
   if pageParam != "":
     let pageNum = parseInt(pageParam)
-    pgn = await db.getHacktivities(pageNum)
+    pgn = await db.getHacktivitiesPages(pageNum)
   else:
-    pgn = await db.getHacktivities()
+    pgn = await db.getHacktivitiesPages()
 
   ctx.ctxData["title"] = "Bug Bounty CVE Vulnerabilities"
   ctx.ctxData["description"] = "How security researchers are making money with bug bounties from CVE vulnerabilities"

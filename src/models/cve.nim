@@ -1,6 +1,9 @@
 import std/[times, options, strformat, strtabs, json]
 
-import ../helpers/app_helper
+import
+  ./researcher,
+  ../helpers/app_helper
+
 
 type
   Cve* = object
@@ -16,9 +19,10 @@ type
     cwe*: Option[Cwe]
     wiki*: JsonNode
     pocsCount*: int
+    # TODO: remove options, since sequence
     products*: Option[seq[Product]]
     hacktivities*: Option[seq[Hacktivity]]
-#    researchers*: Option[seq[Researcher]]
+    researchers*: seq[Researcher]
 
   Cvss3* = object
     score*: string

@@ -146,7 +146,7 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                   span():
                     text "Improve this page"
 
-proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], activity: seq[ResearcherCve]): VNode =
+proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], cves: seq[Cve]): VNode =
   buildHtml():
     section(class="section",id="researcher-index"):
       tdiv(class="container is-desktop"):
@@ -171,22 +171,23 @@ proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], activity: se
           tdiv(class="column is-8"):
             h2(class="title is-size-4"):
               text "Latest Researcher Activity "
-            for item in activity:
+            for cve in cves:
               tdiv(class="card researcher-activity-card"):
                 header(class="card-header"):
                   p(class="card-header-title is-size-5"):
                     span(class="researcher-name"):
-                      a(class = "has-text-primary", href = ctx.urlFor("researcher", {"alias": item.alias})):
-                        text item.name
+                      let researcher = cve.researchers[0]
+                      a(class = "has-text-primary", href = ctx.urlFor("researcher", {"alias": researcher.alias})):
+                        text researcher.name
                     span(class="researcher-cve"):
-                      a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $item.cve.year, "sequence": $item.cve.sequence})):
-                        text item.cve.cveId
+                      a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+                        text cve.cveId
                   tdiv(class="card-header-icon"):
-                    if item.cve.cvss3.isSome():
-                      renderCvssTag(item.cve.cvss3.get())
+                    if cve.cvss3.isSome():
+                      renderCvssTag(cve.cvss3.get())
                 tdiv(class="card-content has-background-black"):
                   p():
-                    text truncate(item.cve.description, 180)
+                    text truncate(cve.description, 180)
                     br()
                     small(class="has-text-grey-light is-size-7"):
-                      text item.cve.pubDate.ago
+                      text cve.pubDate.ago

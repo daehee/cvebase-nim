@@ -23,6 +23,7 @@ proc parsePgDateTime*(s: string): DateTime =
 ## Cve
 
 proc parseCveRow(row: Row): Cve {.inline.} =
+  result.id = parseInt(row[0])  # primary key; field idx 0
   result.cveId = row[1]
   result.year = parseInt(row[2])
   result.sequence = parseInt(row[3])
@@ -129,7 +130,7 @@ const
   order by cves_count desc limit 25""")
 
   # Get the 10 most recent & unique cves that have researcher credit
-  researchersCveActivityQuery = sql("""SELECT DISTINCT cves.id, cves.cve_id, cves.year, cves.sequence, cves.published_date, cves.data, cves.cve_pocs_count, researchers.id FROM cves
+  researchersCveActivityQuery = sql("""SELECT DISTINCT cves.id, cves.cve_id, cves.year, cves.sequence, cves.published_date, cves.data, cves.cve_pocs_count FROM cves
   INNER JOIN cves_researchers ON cves_researchers.cve_id = cves.id
   INNER JOIN researchers ON researchers.id = cves_researchers.researcher_id
   ORDER BY published_date DESC LIMIT 10""".unindent.replace("\n", " "))
@@ -159,13 +160,8 @@ const
   joinHacktivitiesCves = """hacktivities inner join cves_hacktivities ch on hacktivities.id = ch.hacktivity_id
     inner join cves c on ch.cve_id = c.id"""
   hacktivitiesQuery = sql(("select distinct hacktivities.id, title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed from " &
-    joinHacktivitiesCves & " order by disclosed desc limit 10 offset ?"))
+    joinHacktivitiesCves & " order by disclosed desc limit ? offset ?"))
   hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
-
-
-proc questionify*(n: int): string =
-  ## Produces a string like '?,?,?' for n specified entries.
-  repeat("?,", (n - 1)) & "?"
 
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
@@ -180,7 +176,7 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
 
   # Build basic Cve object
   result = parseCveRow(data)
-  result.id = parseInt(data[0])  # primary key; field idx 0
+
 
   # Append rest of fields; join queries
   # cwe
@@ -195,19 +191,45 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   # products
   result.products = parseCveProducts(await db.rows(cveProductsQuery, @[$result.id]))
 
+## Helper functions
 
 template paginateQuery(countQuery: SqlQuery, countParams: seq[string], page: int): untyped =
-  ## Injects offset and count variables for paginated queries
-#  let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
+  ## Calculates offset given current page, and queries total count
+  ## Injects: offset, count
+  # let offset {.inject} = (if page == 1: 0 else: page * resultsPerPage)
   let offset {.inject} = (page - 1) * resultsPerPage
   let countResult = await db.rows(countQuery, countParams)
   let count {.inject.} = parseInt(countResult[0][0])
-  # TODO: Error if invalid page number i.e. page > pages available
+  # TODO: Raise exception if invalid page number: page > pages available
+
+proc questionify(n: int): string =
+  ## Produces a string like '?,?,?' for n specified entries.
+  repeat("?,", (n - 1)) & "?"
+
+proc getInQuery(db: AsyncPool, queryStr: string, ids: seq[string]): Future[seq[Row]] {.async.} =
+  ## Selects sequence of Rows by a sequence of ids.
+  ## Deduplicates ids and then builds a "questionify"-parameterized query using WHERE IN.
+  var queryStr = queryStr
+  let ids = ids.deduplicate(true) # isSorted = true for faster algorithm
+  let qNum = questionify(ids.len)
+  queryStr.add(&" ({qNum})")
+  return await db.rows(queryStr.sql, ids)
+
+proc matchInQuery(inQueryRows: seq[Row], colIdx: int, cmp: string): Row =
+  ## Finds Row in inQueryRows with colIdx value that matches cmp.
+  result = inQueryRows.filterIt(it[colIdx] == cmp)[0] # take first match
+  if result.len == 0: raise newException(ValueError, &"no match for {cmp} in inQuery Rows")
+
+proc fieldOption(field: string): Option[string] =
+  if field != "": return some(field)
+
+
+## Query functions
 
 proc getCvesIndex*(db: AsyncPool; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(cvesIndexCountQuery, @[], page)
   let rows = await db.rows(cvesIndexQuery, @[$offset])
-  result = newPagination[Cve](cvesIndexQuery, page, resultsPerPage, count, newSeq[Cve]())
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
 
@@ -215,7 +237,7 @@ proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[
   paginateQuery(cvesByYearCountQuery, @[$year], page)
   let rows = await db.rows(cvesByYearQuery, @[$year, $offset])
   # TODO: Change to "seek" technique to reduce to single query without offset
-  result = newPagination[Cve](cvesByYearQuery, page, resultsPerPage, count, newSeq[Cve]())
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
 
@@ -230,7 +252,7 @@ proc getCvesByMonth*(db: AsyncPool; year: int, month: int; page: int = 1): Futur
   paginateQuery(cvesByMonthCountQuery, @[beginTime, endTime], page)
   let rows = await db.rows(cvesByMonthQuery, @[beginTime, endTime, $offset])
   # TODO: Change to "seek" technique to reduce to single query without offset
-  result = newPagination[Cve](cvesByMonthQuery, page, resultsPerPage, count, newSeq[Cve]())
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
 
@@ -243,9 +265,6 @@ proc getCveYearMonths*(db: AsyncPool, year: int): Future[seq[int]] {.async.} =
   let rows = await db.rows(cveYearMonthsQuery, @[$year])
   for row in rows:
     result.add parseInt(row[0])
-
-proc fieldOption(field: string): Option[string] =
-  if field != "": return some(field)
 
 proc getResearcher*(db: AsyncPool; alias: string): Future[Researcher] {.async.} =
   let rows = await db.rows(researcherQuery, @[alias])
@@ -272,7 +291,7 @@ proc getResearcher*(db: AsyncPool; alias: string): Future[Researcher] {.async.} 
 proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(researcherCvesCountQuery, @[$rId], page)
   let rows = await db.rows(researcherCvesQuery, @[$rId, $offset])
-  result = newPagination[Cve](researcherCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
 
@@ -286,26 +305,16 @@ proc getResearcherLeaderboard*(db: AsyncPool): Future[seq[Researcher]] {.async.}
   for item in rows:
     result.add Researcher(alias: item[0], name: item[1])
 
-proc getResearchersCveActivity*(db: AsyncPool): Future[seq[ResearcherCve]] {.async.} =
+proc getResearchersCveActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+  ## Get latest published Cves having Researcher credits
   let rows = await db.rows(researchersCveActivityQuery, @[])
+  for row in rows:
+    result.add parseCveRow(row)
 
-  var cves = initTable[string, Cve]() # researcher ids mapped to Cve
-  for item in rows:
-    result.add ResearcherCve(
-      cve: parseCveRow(item),
-      researcherId: item[7],
-    )
-
-  let rIds = result.mapIt(it.researcherId).deduplicate
-
-  let qNum = questionify(rIds.len)
-  let researchersInQuery = sql(&"select id, alias, name from researchers where id in ({qNum})")
-
-  let rows2 = await db.rows(researchersInQuery, rIds)
+  let researcherRows = await db.getInQuery("select researchers.id, alias, name, ch.cve_id from researchers inner join cves_researchers ch on researchers.id = ch.researcher_id where ch.cve_id in", result.mapIt($it.id))
   for i, item in result.pairs:
-    let match = rows2.filterIt(it[0] == item.researcherId)[0]
-    result[i].alias = match[1]
-    result[i].name = match[2]
+    let match = researcherRows.matchInQuery(3, $item.id)
+    result[i].researchers.add Researcher(alias: match[1], name: match[2])
 
 proc getPocLeaderboard*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   let rows = await db.rows(pocLeaderboardQuery, @[])
@@ -338,11 +347,12 @@ proc getProductById*(db: AsyncPool, id: int): Future[Product] {.async.} =
 proc getProductCves*(db: AsyncPool, pId: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(productCvesCountQuery, @[$pId], page)
   let rows = await db.rows(productCvesQuery, @[$pId, $offset])
-  result = newPagination[Cve](productCvesQuery, page, resultsPerPage, count, newSeq[Cve]())
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
   for item in rows:
     result.items.add parseCveRow(item)
 
-proc parseHacktivity(rows: seq[Row]): seq[Hacktivity] =
+proc getHacktivities*(db: AsyncPool, limit: int, offset: int = 0): Future[seq[Hacktivity]] {.async.} =
+  let rows = await db.rows(hacktivitiesQuery, @[$limit, $offset])
   for row in rows:
     result.add Hacktivity(
       id: row[0],
@@ -355,20 +365,19 @@ proc parseHacktivity(rows: seq[Row]): seq[Hacktivity] =
       disclosed_at: parsePgDateTime(row[7]),
     )
 
-proc getHacktivities*(db: AsyncPool, page: int = 1): Future[Pagination[Hacktivity]] {.async.} =
+proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[Hacktivity]] {.async.} =
+  # populate count and offset variables
   paginateQuery(hacktivitiesCountQuery, @[], page)
-  let rows = await db.rows(hacktivitiesQuery, @[$offset])
-  result = newPagination[Hacktivity](hacktivitiesQuery, page, resultsPerPage, count, newSeq[Hacktivity]())
-  # first append hacktivity objects
-  result.items = parseHacktivity(rows)
+  # get hacktivities, mutable to append further cve data
+  var hacktivities = await db.getHacktivities(resultsPerPage, offset)
   # query basic cve data to append to Hacktivity objects
-  let hacktivityIds = result.items.mapIt(it.id)
+  let cvesInQuery = selectCvesJoinsFields & ", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in"
+  let cveRows = await db.getInQuery(cvesInQuery, hacktivities.mapIt(it.id))
 
-  let qNum = questionify(hacktivityIds.len)
-  let cvesInQuery = sql((selectCvesJoinsFields & &", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in ({qNum})"))
-  let rows2 = await db.rows(cvesInQuery, hacktivityIds)
-
-  for i, item in result.items.pairs:
+  for i, item in hacktivities.pairs:
     # match cve query results by hacktivity id
-    let match = rows2.filterIt(it[7] == item.id)[0] # take first
-    result.items[i].cve = Cve(cveId: match[1], year: parseInt(match[2]), sequence: parseInt(match[3]))
+    let match = cveRows.matchInQuery(7, item.id)
+    # let match = cveRows.filterIt(it[7] == item.id)[0] # idx 7 is hacktivity_id; take first
+    hacktivities[i].cve = Cve(cveId: match[1], year: parseInt(match[2]), sequence: parseInt(match[3]))
+
+  result = newPagination[Hacktivity](page, resultsPerPage, count, hacktivities)
