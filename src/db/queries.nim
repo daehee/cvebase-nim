@@ -407,8 +407,7 @@ proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[Hack
   for i, item in hacktivities.pairs:
     # match cve query results by hacktivity id
     let match = cveRows.matchInQuery(7, item.id)
-    # let match = cveRows.filterIt(it[7] == item.id)[0] # idx 7 is hacktivity_id; take first
-    hacktivities[i].cve = Cve(cveId: match[1], year: parseInt(match[2]), sequence: parseInt(match[3]))
+    hacktivities[i].cve = parseCveRow(match)
 
   result = newPagination[Hacktivity](page, resultsPerPage, count, hacktivities)
 

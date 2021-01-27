@@ -377,9 +377,9 @@ proc renderHacktivities*(ctx: Context, pgn: Pagination[Hacktivity]): VNode =
                       p(class="card-header-title"):
                         a(class = "has-text-primary-light is-size-5", href = linkToCve):
                           text hacktivity.cve.cveId
-#                      tdiv(class="card-header-icon"):
-#                        if hacktivity.cve.cvss3.isSome():
-#                          renderCvssTag(hacktivity.cve.cvss3.get())
+                      tdiv(class="card-header-icon"):
+                        if hacktivity.cve.cvss3.isSome():
+                          renderCvssTag(hacktivity.cve.cvss3.get())
                     tdiv(class="card-content has-background-black"):
                       tdiv(class="content"):
                         p:
