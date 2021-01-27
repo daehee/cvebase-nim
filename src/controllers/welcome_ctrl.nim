@@ -16,5 +16,6 @@ proc showWelcome*(ctx: Context) {.async.} =
    ]#
   let researchers = await db.getWelcomeResearchers()
   let cves = await db.getWelcomeCves()
+  let hacktivities = await db.getWelcomeHacktivities()
 
-  resp ctx.renderMain(ctx.renderWelcome(researchers, cves))
+  resp ctx.renderMain(ctx.renderWelcome(researchers, cves, hacktivities))

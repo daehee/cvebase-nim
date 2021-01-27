@@ -395,20 +395,22 @@ proc getHacktivities*(db: AsyncPool, limit: int, offset: int = 0): Future[seq[Ha
       disclosed_at: parsePgDateTime(row[7]),
     )
 
+proc getHacktivitiesCves*(db: AsyncPool, limit: int, offset: int = 0): Future[seq[Hacktivity]] {.async.} =
+  result = await db.getHacktivities(limit, offset)
+  # query basic cve data to append to Hacktivity objects
+  let cvesInQuery = selectCvesJoinsFields & ", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in"
+  let cveRows = await db.getInQuery(cvesInQuery, result.mapIt(it.id))
+
+  for i, item in result.pairs:
+    # match cve query results by hacktivity id
+    let match = cveRows.matchInQuery(7, item.id)
+    result[i].cve = parseCveRow(match)
+
 proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[Hacktivity]] {.async.} =
   # populate count and offset variables
   paginateQuery(hacktivitiesCountQuery, @[], page)
   # get hacktivities, mutable to append further cve data
-  var hacktivities = await db.getHacktivities(resultsPerPage, offset)
-  # query basic cve data to append to Hacktivity objects
-  let cvesInQuery = selectCvesJoinsFields & ", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in"
-  let cveRows = await db.getInQuery(cvesInQuery, hacktivities.mapIt(it.id))
-
-  for i, item in hacktivities.pairs:
-    # match cve query results by hacktivity id
-    let match = cveRows.matchInQuery(7, item.id)
-    hacktivities[i].cve = parseCveRow(match)
-
+  let hacktivities = await db.getHacktivitiesCves(resultsPerPage, offset)
   result = newPagination[Hacktivity](page, resultsPerPage, count, hacktivities)
 
 proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.async.} =
@@ -440,3 +442,6 @@ proc getWelcomeCves*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   let rows = await db.rows(sql(selectCvesIndexFields & " from cves where featured_at is not null order by featured_at desc limit 4"), @[])
   for row in rows:
     result.add parseCveRow(row)
+
+proc getWelcomeHacktivities*(db: AsyncPool): Future[seq[Hacktivity]] {.async.} =
+  result = await db.getHacktivitiesCves(5)

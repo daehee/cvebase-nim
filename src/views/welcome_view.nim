@@ -1,5 +1,5 @@
 import std/[times, strformat, options, strtabs, strutils, json, sequtils, uri]
-import karax/[karaxdsl, vdom]
+import karax/[karaxdsl, vdom, vstyles]
 
 import prologue/core/context
 
@@ -8,7 +8,7 @@ import ../helpers/[app_helper]
 import layout_view
 
 
-proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve]): VNode =
+proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], hacktivities: seq[Hacktivity]): VNode =
   buildHtml():
     tdiv:
       section(class="hero is-black is-medium",id="welcome-hero"):
@@ -44,7 +44,7 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve]):
                       span(class="flag-icon flag-icon-us")
                   tdiv(class="card-content has-background-black"):
                     let cve = researcher.cves[0]
-                    p():
+                    p:
                       text truncate(cve.description, 180)
                       br()
                       small(class="has-text-grey-light is-size-7"):
@@ -74,21 +74,26 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve]):
       # hacktivities
       section(class="section welcome-strip"):
         tdiv(class="container"):
+          # header hacktivities
           header(class="strip-header"):
             h3(class="title is-3"):
               text "Follow these proven ways to make money with Bug Bounty. "
+          # cards hacktivities
           tdiv(class="block"):
-            article(class="media article-hacktivity"):
-              tdiv(class="media-content"):
-                tdiv(class="content"):
-                  p():
-                    a(class="has-text-white",href="/cve/2020/8295"):
-                      text "Denial of Service by requesting to reset a password"
-#                    small(style="margin-bottom: .5rem",class="has-text-grey-light"):
-#                      text "disclosed about 15 hours ago by makerlab"
+            for hacktivity in hacktivities:
+              article(class="media article-hacktivity"):
+                tdiv(class="media-content"):
+                  tdiv(class="content"):
+                    p:
+                      a(class="has-text-white",href= ctx.urlFor("cve", {"year": $hacktivity.cve.year, "sequence": $hacktivity.cve.sequence})):
+                        text hacktivity.title
+                      small(style = "margin-bottom: .5rem".toCss, class = "has-text-grey-light"):
+                        text &"disclosed {hacktivity.disclosedAt.ago} by {hacktivity.researcher}"
           tdiv(class="buttons is-centered section-cta"):
             a(class="button is-primary",href="/bugbounty"):
               text "View bug bounties"
+
+      # labs
       section(class="section welcome-strip"):
         tdiv(class="container"):
           header(class="strip-header"):
