@@ -174,10 +174,33 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                   italic(class="fab fa-github")
                 span():
                   text "Add PoC"
+
+            # Labs
             if cve.wiki.hasKey("courses"):
               h3():
                 text "Research Labs"
               renderCveLabButtons(cve.wiki["courses"].getElems())
+
+            # Hacktivities
+            if len(cve.hacktivities) > 0:
+              h3:
+                text "Bug Bounty"
+              for hacktivity in cve.hacktivities:
+                tdiv(class = "card"):
+                  tdiv(class = "card-content has-background-black"):
+                    tdiv(class = "content"):
+                      p:
+                        text &"{hacktivity.vendor}: {hacktivity.title}"
+                      p:
+                        small(class = "has-text-grey-light"):
+                          text &"submitted by {hacktivity.researcher} {hacktivity.submittedAt.ago}"
+                        br()
+                        small(class = "has-text-grey-light"):
+                          text &"publicly disclosed {hacktivity.disclosedAt.ago}"
+                    tdiv(class = "buttons"):
+                      a(class="button is-small", rel="nofollow", target="_blank", href= hacktivity.url):
+                        text "read report"
+
 
             h3():
               text "Official References"

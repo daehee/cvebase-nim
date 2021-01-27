@@ -67,6 +67,10 @@ proc parseCveProducts(rows: seq[Row]): seq[Product] =
   for row in rows:
     result.add Product(name: row[0], slug: row[1])
 
+proc parseCveHacktivities(rows: seq[Row]): seq[Hacktivity] =
+  # title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed
+  for row in rows:
+    result.add Hacktivity(title: row[0], researcher: row[1], url: row[2], vendor: row[3], vendorHandle: row[4], submittedAt: parsePgDateTime(row[5]), disclosedAt: parsePgDateTime(row[6]))
 
 const
   resultsPerPage = 10
@@ -154,11 +158,14 @@ const
   cveProductsQuery = sql("select name, slug from products inner join cves_products cp on products.id = cp.product_id where cp.cve_id = ?")
 
   # hacktivities
+  hacktivitiesFields = "title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed"
   joinHacktivitiesCves = """hacktivities inner join cves_hacktivities ch on hacktivities.id = ch.hacktivity_id
     inner join cves c on ch.cve_id = c.id"""
-  hacktivitiesQuery = sql(("select distinct hacktivities.id, title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed from " &
+  hacktivitiesQuery = sql((&"select distinct hacktivities.id, {hacktivitiesFields} from " &
     joinHacktivitiesCves & " order by disclosed desc limit ? offset ?"))
   hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
+
+  cveHacktivitiesQuery = sql(&"select {hacktivitiesFields} from hacktivities inner join cves_hacktivities cp on hacktivities.id = cp.hacktivity_id where cp.cve_id = ?")
 
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
@@ -187,6 +194,8 @@ proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
     result.wiki = parseJson(wikiData)
   # products
   result.products = parseCveProducts(await db.rows(cveProductsQuery, @[$result.id]))
+  # hacktivities
+  result.hacktivities = parseCveHacktivities(await db.rows(cveHacktivitiesQuery, @[$result.id]))
 
 ## Helper functions
 
