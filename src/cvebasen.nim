@@ -84,7 +84,7 @@ app.addRoute(researcherRoutes, "/researcher")
 app.addRoute(productRoutes, "/product")
 app.addRoute(pocRoutes, "/poc")
 app.addRoute("/bugbounty", showHacktivities, HttpGet, "hacktivityIndex")
-#app.addRoute("/labs", showLabs, HttpGet)
+app.addRoute("/lab", showLabs, HttpGet, "labIndex")
 app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
 #app.addRoute("/", showWelcome, HttpGet)
 app.registerErrorHandler(Http404, go404)

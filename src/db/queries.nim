@@ -60,15 +60,17 @@ proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
   for row in rows:
     result.add Poc(url: row[0])
 
+proc parseLabVendor(url: string): string =
+  if url.contains("pentesterlab"): "PentesterLab"
+  elif url.contains("vulhub"): "Vulhub"
+  elif url.contains("hackthebox"): "Hack The Box"
+  elif url.contains("tryhackme"): "TryHackMe"
+  else: ""
+
 proc parseLabs(rows: seq[Row]): seq[Lab] =
   for row in rows:
     let url = row[0]
-    let vendor = if url.contains("pentesterlab"): "PentesterLab"
-    elif url.contains("vulhub"): "Vulhub"
-    elif url.contains("hackthebox"): "Hack The Box"
-    elif url.contains("tryhackme"): "TryHackMe"
-    else: ""
-    result.add Lab(url: url, vendor: vendor)
+    result.add Lab(url: url, vendor: parseLabVendor(url))
 
 proc parseCwe(rows: seq[Row]): Cwe =
   Cwe(name: rows[0][0], description: rows[0][1])
@@ -85,7 +87,7 @@ proc parseCveHacktivities(rows: seq[Row]): seq[Hacktivity] =
 const
   resultsPerPage = 10
 
-  selectCvesIndexFields = "select id, cve_id, year, sequence, published_date, data, cve_pocs_count"
+  selectCvesIndexFields = "select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count"
   selectCvesJoinsFields = "select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count"
 
   cveBySequenceQuery = sql(selectCvesIndexFields & ", wiki_data, cwe_id from cves where year = ? and sequence = ?")
@@ -178,6 +180,12 @@ const
   hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
 
   cveHacktivitiesQuery = sql(&"select {hacktivitiesFields} from hacktivities inner join cves_hacktivities cp on hacktivities.id = cp.hacktivity_id where cp.cve_id = ?")
+
+  labsActivityCountQuery = sql("select count(*) from cves inner join cve_references cr on cves.id = cr.cve_id where cr.type = 'CveCourse'")
+  labsActivityQuery = sql(selectCvesIndexFields & """, cr.url from cves
+    inner join cve_references cr on cves.id = cr.cve_id
+    where cr.type = 'CveCourse'
+    order by published_date desc limit ? offset ?""")
 
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
@@ -403,3 +411,14 @@ proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[Hack
     hacktivities[i].cve = Cve(cveId: match[1], year: parseInt(match[2]), sequence: parseInt(match[3]))
 
   result = newPagination[Hacktivity](page, resultsPerPage, count, hacktivities)
+
+proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.async.} =
+  paginateQuery(labsActivityCountQuery, @[], page)
+  let rows = await db.rows(labsActivityQuery, @[$resultsPerPage, $offset])
+
+  var labs: seq[Lab]
+  for i, row in rows.pairs:
+    let labUrl = row[7]
+    labs.add Lab(url: labUrl, vendor: parseLabVendor(labUrl), cve: parseCveRow(row))
+
+  result = newPagination[Lab](page, resultsPerPage, count, labs)

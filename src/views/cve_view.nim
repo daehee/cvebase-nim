@@ -397,3 +397,36 @@ proc renderHacktivities*(ctx: Context, pgn: Pagination[Hacktivity]): VNode =
                           text "read report"
             hr()
             ctx.renderPagination(pgn, "hacktivityIndex", @[])
+
+proc renderLabs*(ctx: Context, pgn: Pagination[Lab]): VNode =
+  buildHtml():
+    section(class="section"):
+      tdiv(class="container is-widescreen"):
+        tdiv(class="columns"):
+          tdiv(class="column"):
+            tdiv(class="columns is-multiline"):
+              for lab in pgn.items:
+                let linkToCve = ctx.urlFor("cve", {"year": $lab.cve.year, "sequence": $lab.cve.sequence})
+                tdiv(class="column is-half"):
+                  tdiv(class="card"):
+                    header(class="card-header"):
+                      p(class="card-header-title"):
+                        a(class = "has-text-primary-light is-size-5", href = linkToCve):
+                          text &"{lab.vendor}: {lab.cve.cveId}"
+                      tdiv(class="card-header-icon"):
+                        if lab.cve.cvss3.isSome():
+                          renderCvssTag(lab.cve.cvss3.get())
+                    tdiv(class="card-content has-background-black"):
+                      tdiv(class="content"):
+                        p:
+                          text truncate(lab.cve.description, 180)
+                          br()
+                          small(class="has-text-grey-light"):
+                            text &"{lab.cve.pubDate.ago}"
+                      tdiv(class="buttons"):
+                        a(class = "button is-small", href = linkToCve):
+                          text "view CVE"
+                        a(class = "button is-small", href = lab.url):
+                          text "view lab"
+            hr()
+            ctx.renderPagination(pgn, "labIndex", @[])

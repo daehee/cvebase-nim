@@ -40,6 +40,7 @@ type
   Lab* = object
     url*: string
     vendor*: string
+    cve*: Cve
 
   Product* = object
     id*: int # primary key from db
