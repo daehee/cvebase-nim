@@ -20,8 +20,8 @@ type
     wiki*: JsonNode
     pocsCount*: int
     # TODO: remove options, since sequence
-    products*: Option[seq[Product]]
-    hacktivities*: Option[seq[Hacktivity]]
+    products*: seq[Product]
+    hacktivities*: seq[Hacktivity]
     researchers*: seq[Researcher]
 
   Cvss3* = object

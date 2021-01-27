@@ -132,12 +132,11 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                       text researcher.name
 
             # Products
-            if cve.products.isSome():
+            if len(cve.products) > 0:
               h3:
                 text "Vulnerable Products"
               ul:
-                let products = cve.products.get()
-                for product in products:
+                for product in cve.products:
                   li:
                     a(href = ctx.urlFor("product", {"slug": product.slug})):
                       text product.name

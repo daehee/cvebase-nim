@@ -63,12 +63,9 @@ proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
 proc parseCwe(rows: seq[Row]): Cwe =
   Cwe(name: rows[0][0], description: rows[0][1])
 
-proc parseCveProducts(rows: seq[Row]): Option[seq[Product]] =
-  if len(rows) == 0: return
-  var products = newSeq[Product]()
+proc parseCveProducts(rows: seq[Row]): seq[Product] =
   for row in rows:
-    products.add Product(name: row[0], slug: row[1])
-  result = some(products)
+    result.add Product(name: row[0], slug: row[1])
 
 
 const
