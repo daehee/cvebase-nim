@@ -17,12 +17,19 @@ proc isValidYear(year: int): bool =
 proc isValidMonth(month: int): bool =
   if month in 1..12: return true
 
-
 proc showCve*(ctx: Context) {.async.} =
+  let yearParam = ctx.getPathParams("year")
+  var seqParam = ctx.getPathParams("sequence")
+  # Redirect .amp paths
+  if seqParam.contains(".amp"):
+    seqParam = seqParam.split(".amp")[0]
+    resp redirect(&"/cve/{yearParam}/{seqParam}", Http302)
+    return
+
   var year, seq: int
   try:
-    year = parseInt(ctx.getPathParams("year"))
-    seq = parseInt(ctx.getPathParams("sequence"))
+    year = parseInt(yearParam)
+    seq = parseInt(seqParam)
   except:
     respDefault Http404
     return
