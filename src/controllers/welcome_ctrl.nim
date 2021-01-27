@@ -15,5 +15,6 @@ proc showWelcome*(ctx: Context) {.async.} =
     @researchers = Researcher.limit(3).order("RANDOM()")
    ]#
   let researchers = await db.getWelcomeResearchers()
+  let cves = await db.getWelcomeCves()
 
-  resp ctx.renderMain(ctx.renderWelcome(researchers))
+  resp ctx.renderMain(ctx.renderWelcome(researchers, cves))

@@ -434,3 +434,9 @@ proc getWelcomeResearchers*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
   for i, item in result.pairs:
     let match = cveRows.matchInQuery(7, $item.id)
     result[i].cves.add parseCveRow(match)
+
+proc getWelcomeCves*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+  # get featured cves
+  let rows = await db.rows(sql(selectCvesIndexFields & " from cves where featured_at is not null order by featured_at desc limit 4"), @[])
+  for row in rows:
+    result.add parseCveRow(row)

@@ -177,3 +177,32 @@ proc renderCvssTag*(cvss3: Cvss3): VNode =
     tdiv(class="tags"):
       span(class = &"tag {colorClass}"):
         text &"{cvss3.score} {cvss3.severity}"
+
+proc renderCveCard*(ctx: Context, cve:Cve): VNode =
+  let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
+  buildHtml():
+    tdiv(class="column is-half"):
+      tdiv(class="card"):
+        header(class="card-header"):
+          p(class="card-header-title"):
+            a(class = "has-text-primary-light is-size-5", href = linkToCve):
+              text cve.cveId
+          tdiv(class="card-header-icon"):
+            if cve.cvss3.isSome():
+              renderCvssTag(cve.cvss3.get())
+        tdiv(class="card-content has-background-black"):
+          p():
+            text truncate(cve.description, 180)
+            br()
+            small(class="has-text-grey-light is-size-7"):
+              text cve.pubDate.ago
+        footer(class="card-footer"):
+          p(class="card-footer-item"):
+            span(class="is-size-7"):
+              a(class = "has-text-white", href = linkToCve):
+                text "show details"
+          p(class="card-footer-item"):
+            span(class="is-size-7"):
+              if cve.pocsCount > 0:
+                a(class = "has-text-primary", href = linkToCve):
+                  text &"{cve.pocsCount} PoC exploits available"

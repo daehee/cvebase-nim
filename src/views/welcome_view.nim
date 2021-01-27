@@ -8,7 +8,7 @@ import ../helpers/[app_helper]
 import layout_view
 
 
-proc renderWelcome*(ctx: Context, researchers: seq[Researcher]): VNode =
+proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve]): VNode =
   buildHtml():
     tdiv:
       section(class="hero is-black is-medium",id="welcome-hero"):
@@ -27,9 +27,11 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher]): VNode =
       # researchers
       section(class="section welcome-strip"):
         tdiv(class="container"):
+          # header researchers
           header(class="strip-header"):
             h3(class="title is-3"):
               text "Share in the passion of the world\'s top Security Researchers. "
+          # cards researchers
           tdiv(class="columns is-multiline"):
             for researcher in researchers:
               tdiv(class="column is-one-third"):
@@ -47,3 +49,51 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher]): VNode =
                       br()
                       small(class="has-text-grey-light is-size-7"):
                         text cve.pubDate.ago
+          # cta researchers
+          tdiv(class="buttons is-centered section-cta"):
+            a(class="button is-primary",href="/researcher"):
+              text "View top researchers"
+
+      # cves
+      section(class="section welcome-strip"):
+        tdiv(class="container"):
+          # header cves
+          header(class="strip-header"):
+            h3(class="title is-3"):
+              text "Discover vulnerabilities being exploited in the wild, right now. "
+          tdiv(class="columns is-multiline"):
+            for cve in cves:
+              ctx.renderCveCard(cve)
+          # cta cves
+          tdiv(class="buttons is-centered section-cta"):
+            a(class="button is-primary",href="/cve"):
+              text "View popular CVEs"
+            a(class="button",href="/poc"):
+              text "Show me the exploits"
+
+      # hacktivities
+      section(class="section welcome-strip"):
+        tdiv(class="container"):
+          header(class="strip-header"):
+            h3(class="title is-3"):
+              text "Follow these proven ways to make money with Bug Bounty. "
+          tdiv(class="block"):
+            article(class="media article-hacktivity"):
+              tdiv(class="media-content"):
+                tdiv(class="content"):
+                  p():
+                    a(class="has-text-white",href="/cve/2020/8295"):
+                      text "Denial of Service by requesting to reset a password"
+#                    small(style="margin-bottom: .5rem",class="has-text-grey-light"):
+#                      text "disclosed about 15 hours ago by makerlab"
+          tdiv(class="buttons is-centered section-cta"):
+            a(class="button is-primary",href="/bugbounty"):
+              text "View bug bounties"
+      section(class="section welcome-strip"):
+        tdiv(class="container"):
+          header(class="strip-header"):
+            h3(class="title is-3"):
+              text "Learn to pwn in a safe environment. "
+          tdiv(class="buttons is-centered section-cta"):
+            a(class="button is-primary",href="/lab"):
+              text "View research labs"
