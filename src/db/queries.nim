@@ -421,3 +421,16 @@ proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.asyn
     labs.add Lab(url: labUrl, vendor: parseLabVendor(labUrl), cve: parseCveRow(row))
 
   result = newPagination[Lab](page, resultsPerPage, count, labs)
+
+proc getWelcomeResearchers*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
+  let researcherRows = await db.rows(sql("select id, alias, name from (select * from researchers order by cves_count desc limit 25) subquery_for_top order by random() limit 3"), @[])
+  for row in researcherRows:
+    result.add Researcher(id: parseInt(row[0]), alias: row[1], name: row[2])
+
+  # Get 3 random researchers and their latest cve
+  let cvesInQuery = selectCvesJoinsFields & ", cr.researcher_id from cves inner join cves_researchers cr on cves.id = cr.cve_id where cr.researcher_id in"
+  let cveRows = await db.getInQuery(cvesInQuery, result.mapIt($it.id))
+
+  for i, item in result.pairs:
+    let match = cveRows.matchInQuery(7, $item.id)
+    result[i].cves.add parseCveRow(match)

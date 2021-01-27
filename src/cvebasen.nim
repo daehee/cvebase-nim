@@ -8,7 +8,7 @@ import
 import
   globals,
   config,
-  controllers/[cve_ctrl, researcher_ctrl, error_ctrl]
+  controllers/[cve_ctrl, researcher_ctrl, error_ctrl, welcome_ctrl]
 from db/pg import newAsyncPool
 
 
@@ -86,6 +86,6 @@ app.addRoute(pocRoutes, "/poc")
 app.addRoute("/bugbounty", showHacktivities, HttpGet, "hacktivityIndex")
 app.addRoute("/lab", showLabs, HttpGet, "labIndex")
 app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
-#app.addRoute("/", showWelcome, HttpGet)
+app.addRoute("/", showWelcome, HttpGet, "welcome")
 app.registerErrorHandler(Http404, go404)
 app.run()

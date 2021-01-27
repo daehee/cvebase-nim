@@ -63,6 +63,24 @@ type
     disclosedAt*: DateTime
     cve*: Cve
 
+  Researcher* = object
+    id*: int # db primary key
+    name*: string
+    alias*: string
+    nationality*: string
+    bio*: string
+    cvesCount*: int
+    social*: ResearcherSocial
+    cves*: seq[Cve]
+
+  ResearcherSocial* = object
+    website*: Option[string]
+    twitter*: Option[string]
+    github*: Option[string]
+    linkedin*: Option[string]
+    hackerone*: Option[string]
+    bugcrowd*: Option[string]
+
 
 proc titleTag*(cve: Cve): string =
   result = cve.cveId
