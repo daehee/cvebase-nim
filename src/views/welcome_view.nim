@@ -15,13 +15,7 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], 
         tdiv(class="hero-body"):
           tdiv(class="container has-text-centered"):
             h1(class="title intro-title is-size-2"):
-              text "Find your "
-              strong():
-                text "inspiration"
-              text "in the state of "
-              strong():
-                text "insecurity"
-              text ". "
+              verbatim "Find your <strong>inspiration</strong> in the state of <strong>insecurity</strong>."
             h2(class="subtitle is-size-4"):
               text "Follow security researchers, discover trending PoC exploits, learn by reversing CVEs. "
       # researchers
