@@ -1,7 +1,5 @@
 import std/[options]
 
-import cve
-
 type
   Researcher* = object
     id*: int # db primary key

@@ -1,7 +1,5 @@
 import std/[options, math]
 
-from ../db/pg import SqlQuery
-
 type
   # Pagination is a generic type with generic param `T`
   # representing paginated results from the db.

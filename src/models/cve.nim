@@ -19,7 +19,6 @@ type
     cwe*: Option[Cwe]
     wiki*: JsonNode
     pocsCount*: int
-    # TODO: remove options, since sequence
     products*: seq[Product]
     hacktivities*: seq[Hacktivity]
     researchers*: seq[Researcher]
@@ -36,7 +35,6 @@ type
     url*: string
     updatedAt*: DateTime
 
-  # TODO split into own model files
   Product* = object
     id*: int # primary key from db
     name*: string
