@@ -393,7 +393,7 @@ proc renderHacktivities*(ctx: Context, pgn: Pagination[Hacktivity]): VNode =
                       tdiv(class="buttons"):
                         a(class = "button is-small", href = linkToCve):
                           text "view CVE"
-                        a(class = "button is-small", href = ""):
+                        a(class = "button is-small", target = "_blank", href = hacktivity.url):
                           text "read report"
             hr()
             ctx.renderPagination(pgn, "hacktivityIndex", @[])
@@ -426,7 +426,7 @@ proc renderLabs*(ctx: Context, pgn: Pagination[Lab]): VNode =
                       tdiv(class="buttons"):
                         a(class = "button is-small", href = linkToCve):
                           text "view CVE"
-                        a(class = "button is-small", href = lab.url):
+                        a(class = "button is-small", target = "_blank", href = lab.url):
                           text "view lab"
             hr()
             ctx.renderPagination(pgn, "labIndex", @[])
