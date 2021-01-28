@@ -5,9 +5,7 @@ import prologue
 import
   ../globals,
   ../db/queries,
-  ../models/[cve, pagination],
-  ../views/[layout_view, researcher_view],
-  ../helpers/app_helper
+  ../views/[layout_view, researcher_view]
 
 proc showResearcher*(ctx: Context) {.async.} =
   let alias = ctx.getPathParams("alias")

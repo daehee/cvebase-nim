@@ -5,9 +5,7 @@ import prologue
 import
   ../globals,
   ../db/queries,
-  ../models/[cve, pagination],
-  ../views/[layout_view, cve_view],
-  ../helpers/app_helper
+  ../views/[layout_view, cve_view]
 
 let currentYear = now().year
 
