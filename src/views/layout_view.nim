@@ -174,9 +174,8 @@ proc renderHero*(title: string): HeroVNode =
 proc renderCvssTag*(cvss3: Cvss3): VNode =
   let colorClass = severityColorClass(cvss3.severity)
   buildHtml():
-    tdiv(class="tags"):
-      span(class = &"tag {colorClass}"):
-        text &"{cvss3.score} {cvss3.severity}"
+    span(class = &"tag {colorClass}"):
+      text &"{cvss3.score} {cvss3.severity}"
 
 proc renderCveCard*(ctx: Context, cve:Cve): VNode =
   let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})

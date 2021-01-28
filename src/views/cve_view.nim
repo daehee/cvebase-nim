@@ -351,8 +351,12 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode
                     a(class = "has-text-primary-light is-size-5", href = linkToCve):
                       text &"{poc.cve.cveId}"
                   tdiv(class="card-header-icon"):
-                    if poc.cve.cvss3.isSome():
-                      renderCvssTag(poc.cve.cvss3.get())
+                    tdiv(class="tags"):
+                      if poc.cve.cvss3.isSome():
+                        renderCvssTag(poc.cve.cvss3.get())
+                      if poc.cve.pocsCount == 1:
+                        span(class = &"tag"):
+                          text "FIRST BLOOD"
                 tdiv(class="card-content has-background-black"):
                   tdiv(class="content"):
                     p:

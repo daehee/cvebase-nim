@@ -31,6 +31,9 @@ proc parseCvss3(data: JsonNode): Option[Cvss3] =
     )
     result = some(cvss3)
 
+proc parseCvePocsCount(data: string): int =
+  # initialize with 0 if cve_pocs_count column is NULL
+  result = if data == "": 0 else: parseInt(data)
 
 proc parseCveRow(row: Row): Cve {.inline.} =
   result.id = parseInt(row[0])  # primary key; field idx 0
@@ -39,9 +42,7 @@ proc parseCveRow(row: Row): Cve {.inline.} =
   result.sequence = parseInt(row[3])
   result.pubDate = parsePgDateTime(row[4])
 
-  # initialize with 0 if cve_pocs_count column is NULL
-  let pocsCount = row[6]
-  result.pocsCount = if pocsCount == "": 0 else: parseInt(pocsCount)
+  result.pocsCount = parseCvePocsCount(row[6])
 
   let cveData = row[5]
   if cveData != "":
@@ -163,7 +164,7 @@ const
   where cves.id in
   (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
 
-  pocActivityQuery = sql("""select url, DATE_TRUNC('second', cr.created_at), c.cve_id, year, sequence, data from cve_references cr
+  pocActivityQuery = sql("""select url, DATE_TRUNC('second', cr.created_at), c.cve_id, year, sequence, data, cve_pocs_count from cve_references cr
   inner join cves c on c.id = cr.cve_id
   where cr.type = 'CvePoc'
   order by cr.created_at desc limit 25""".unindent.replace("\n", " "))
@@ -371,7 +372,8 @@ proc getPocActivity*(db: AsyncPool): Future[seq[Poc]] {.async.} =
       cveId: row[2],
       year: parseInt(row[3]),
       sequence: parseInt(row[4]),
-      cvss3: if cveData != "": parseJson(cveData).parseCvss3() else: none(Cvss3)
+      cvss3: if cveData != "": parseJson(cveData).parseCvss3() else: none(Cvss3),
+      pocsCount: parseCvePocsCount(row[6])
     )
     result.add Poc(url: row[0], createdAt: parsePgDateTime(row[1]), cve: cve)
 
