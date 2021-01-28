@@ -322,24 +322,7 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode
   buildHtml():
     section(class="section",id="pocs-index"):
       tdiv(class="container is-desktop"):
-        tdiv(class="columns is-variable is-1-mobile is-2-tablet is-4-desktop is-8-widescreen is-8-fullhd"):
-          tdiv(class="column is-4"):
-            h2(class="title is-size-4"):
-              text "Top CVEs by Exploits"
-            table(class="table is-fullwidth"):
-              tbody():
-                for i, cve in leaders.pairs():
-                  tr():
-                    td():
-                      span(class="has-text-grey-light"):
-                        text $(i + 1)
-                    td:
-                      a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
-                        text cve.cveId
-                    if cve.cvss3.isSome():
-                      td():
-                        renderCvssTag(cve.cvss3.get())
-          br()
+        tdiv(class="columns is-variable is-1-mobile is-0-tablet is-2-desktop is-8-widescreen is-8-fullhd"):
           tdiv(class="column"):
             h2(class="title is-size-4"):
               text "Latest CVE Exploit Activity"
@@ -369,6 +352,23 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode
                       text "view CVE"
                     a(class = "button is-small", target = "_blank", rel = "nofollow", href = poc.url):
                       text "view Exploit"
+          br()
+          tdiv(class="column is-4"):
+            h2(class="title is-size-4"):
+              text "Top CVEs by Exploits"
+            table(class="table is-fullwidth"):
+              tbody():
+                for i, cve in leaders.pairs():
+                  tr():
+                    td():
+                      span(class="has-text-grey-light"):
+                        text $(i + 1)
+                    td:
+                      a(class = "has-text-white", href = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
+                        text cve.cveId
+                    if cve.cvss3.isSome():
+                      td():
+                        renderCvssTag(cve.cvss3.get())
 
 
 proc renderProduct*(ctx: Context, product: Product, pgn: Pagination[Cve]): VNode =
