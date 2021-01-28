@@ -39,7 +39,8 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], 
                   tdiv(class="card-content has-background-black"):
                     let cve = researcher.cves[0]
                     p:
-                      text truncate(cve.description, 180)
+                      text &"{cve.cveId}: "
+                      text truncate(cve.description, 160)
                       br()
                       small(class="has-text-grey-light is-size-7"):
                         text cve.pubDate.ago

@@ -234,13 +234,15 @@ proc questionify(n: int): string =
   ## Produces a string like '?,?,?' for n specified entries.
   repeat("?,", (n - 1)) & "?"
 
-proc getInQuery(db: AsyncPool, queryStr: string, ids: seq[string]): Future[seq[Row]] {.async.} =
+proc getInQuery(db: AsyncPool, queryStr: string, ids: seq[string], order: string = ""): Future[seq[Row]] {.async.} =
   ## Selects sequence of Rows by a sequence of ids.
   ## Deduplicates ids and then builds a "questionify"-parameterized query using WHERE IN.
   var queryStr = queryStr
   let ids = ids.deduplicate(true) # isSorted = true for faster algorithm
   let qNum = questionify(ids.len)
   queryStr.add(&" ({qNum})")
+  if order != "":
+    queryStr.add(&" order by {order}")
   return await db.rows(queryStr.sql, ids)
 
 proc matchInQuery(inQueryRows: seq[Row], colIdx: int, cmp: string): Row =
@@ -431,7 +433,7 @@ proc getWelcomeResearchers*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
 
   # Get 3 random researchers and their latest cve
   let cvesInQuery = selectCvesJoinsFields & ", cr.researcher_id from cves inner join cves_researchers cr on cves.id = cr.cve_id where cr.researcher_id in"
-  let cveRows = await db.getInQuery(cvesInQuery, result.mapIt($it.id))
+  let cveRows = await db.getInQuery(cvesInQuery, result.mapIt($it.id), "published_date desc")
 
   for i, item in result.pairs:
     let match = cveRows.matchInQuery(7, $item.id)
