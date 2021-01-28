@@ -1,7 +1,6 @@
 import std/[times, options, strformat, strtabs, json]
 
 import
-  ./researcher,
   ../helpers/app_helper
 
 

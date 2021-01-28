@@ -5,7 +5,6 @@ import prologue
 import
   ../globals,
   ../db/queries,
-  ../models/[researcher, cve],
   ../views/[layout_view, welcome_view]
 
 proc showWelcome*(ctx: Context) {.async.} =

@@ -4,7 +4,7 @@ import markdown
 
 import prologue/core/context
 
-import ../models/[cve, pagination, researcher]
+import ../models/[cve, pagination]
 import ../helpers/[app_helper, cve_helper]
 import layout_view
 

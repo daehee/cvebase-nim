@@ -5,7 +5,7 @@ import prologue
 import
   ../globals,
   ../db/queries,
-  ../models/[researcher, cve, pagination],
+  ../models/[cve, pagination],
   ../views/[layout_view, researcher_view],
   ../helpers/app_helper
 
