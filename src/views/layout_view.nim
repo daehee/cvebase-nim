@@ -164,7 +164,7 @@ proc renderPagination*(ctx: Context, pgn: Pagination, route: string, params: ope
           text "Next page"
 
 proc renderHero*(title: string): HeroVNode =
-  let hero = buildHtml(section(class="hero is-black is-medium",id="page-hero")):
+  let hero = buildHtml(section(class="hero is-black",id="page-hero")):
     tdiv(class="hero-body"):
       tdiv(class="container has-text-centered"):
         h1(class="title is-2"):
