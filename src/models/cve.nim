@@ -34,8 +34,8 @@ type
 
   Poc* = object
     url*: string
-    # TODO: Remove updatedAt?
-    updatedAt*: DateTime
+    createdAt*: DateTime
+    cve*: Cve
 
   Lab* = object
     url*: string

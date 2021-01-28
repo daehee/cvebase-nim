@@ -157,7 +157,7 @@ proc showCveIndex*(ctx: Context) {.async.} =
 
 proc showPocIndex*(ctx: Context) {.async.} =
   let leaders = await db.getPocLeaderboard()
-  let activity = await db.getCvesPocActivity()
+  let activity = await db.getPocActivity()
 
   ctx.ctxData["title"] = &"Top CVEs with Proof-of-Concept Exploits"
   ctx.ctxData["description"] = &"Top-Ranked CVE Vulnerabilities with Open-Source Proof-of-Concept Exploits"

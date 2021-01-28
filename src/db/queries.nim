@@ -22,6 +22,16 @@ proc parsePgDateTime*(s: string): DateTime =
 
 ## Cve
 
+proc parseCvss3(data: JsonNode): Option[Cvss3] =
+  let score = data["impact"]["baseMetricV3"]["cvssV3"]["baseScore"].getFloat()
+  if score > 0:
+    let cvss3 = Cvss3(
+      score: if score == 10: "10" else: $score.formatFloat(ffDecimal, 1),
+      severity: data["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"].getStr()
+    )
+    result = some(cvss3)
+
+
 proc parseCveRow(row: Row): Cve {.inline.} =
   result.id = parseInt(row[0])  # primary key; field idx 0
   result.cveId = row[1]
@@ -42,13 +52,8 @@ proc parseCveRow(row: Row): Cve {.inline.} =
       for item in cveDataJson["cve"]["references"]["reference_data"]:
         result.refUrls.add(item["url"].getStr())
 
-    # CVSS data if exists
-    let score = cveDataJson["impact"]["baseMetricV3"]["cvssV3"]["baseScore"].getFloat()
-    if score > 0:
-      result.cvss3 = Cvss3(
-        score: if score == 10: "10" else: $score.formatFloat(ffDecimal, 1),
-        severity: cveDataJson["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"].getStr()
-      ).some()
+    # CVSS3 data if exists
+    result.cvss3 = parseCvss3(cveDataJson)
   else:
     let fmtDate = result.pubDate.format("MMM d, yyyy")
     result.description = (&"""{result.cveId} is reserved and pending public disclosure since {fmtDate}.
@@ -154,9 +159,14 @@ const
   pocLeaderboardQuery = sql(selectCvesIndexFields & """ from cves
   order by cve_pocs_count desc nulls last limit 25""")
 
-  pocActivityQuery = sql(selectCvesIndexFields & """ from cves
+  cvesPocActivityQuery = sql(selectCvesIndexFields & """ from cves
   where cves.id in
   (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
+
+  pocActivityQuery = sql("""select url, DATE_TRUNC('second', cr.created_at), c.cve_id, year, sequence, data from cve_references cr
+  inner join cves c on c.id = cr.cve_id
+  where cr.type = 'CvePoc'
+  order by cr.created_at desc limit 25""".unindent.replace("\n", " "))
 
   productQuery = sql("select id, name, slug from products where slug = ?")
   productByIdQuery = sql("select slug from products where id = ?")
@@ -353,8 +363,21 @@ proc getPocLeaderboard*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   for item in rows:
     result.add parseCveRow(item)
 
-proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+proc getPocActivity*(db: AsyncPool): Future[seq[Poc]] {.async.} =
   let rows = await db.rows(pocActivityQuery, @[])
+  for row in rows:
+    let cveData = row[5]
+    let cve = Cve(
+      cveId: row[2],
+      year: parseInt(row[3]),
+      sequence: parseInt(row[4]),
+      cvss3: if cveData != "": parseJson(cveData).parseCvss3() else: none(Cvss3)
+    )
+    result.add Poc(url: row[0], createdAt: parsePgDateTime(row[1]), cve: cve)
+
+proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+  ## Deprecated: Use getPocActivity instead
+  let rows = await db.rows(cvesPocActivityQuery, @[])
   for item in rows:
     result.add parseCveRow(item)
 

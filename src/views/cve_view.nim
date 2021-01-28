@@ -318,7 +318,7 @@ proc renderCveIndex*(ctx: Context, pgn: Pagination, allyears: seq[int]): VNode =
           tdiv(class="column is-2"):
             ctx.renderCveDateSidebar((year: "", monthNum: ""), allYears, newSeq[int]())
 
-proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
+proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode =
   buildHtml():
     section(class="section",id="pocs-index"):
       tdiv(class="container is-desktop"):
@@ -343,9 +343,29 @@ proc renderPocIndex*(ctx: Context; leaders, activity: seq[Cve]): VNode =
           tdiv(class="column"):
             h2(class="title is-size-4"):
               text "Latest CVE Exploit Activity"
-            tdiv(class="columns is-multiline"):
-              for cve in activity:
-                ctx.renderCveCard(cve)
+            for poc in activity:
+              let linkToCve = ctx.urlFor("cve", {"year": $poc.cve.year, "sequence": $poc.cve.sequence})
+              tdiv(class="card mb-2"):
+                header(class="card-header"):
+                  p(class="card-header-title"):
+                    a(class = "has-text-primary-light is-size-5", href = linkToCve):
+                      text &"{poc.cve.cveId}"
+                  tdiv(class="card-header-icon"):
+                    if poc.cve.cvss3.isSome():
+                      renderCvssTag(poc.cve.cvss3.get())
+                tdiv(class="card-content has-background-black"):
+                  tdiv(class="content"):
+                    p:
+                      verbatim peekOutlink(poc.url)
+                      br()
+                      small(class="has-text-grey-light"):
+                        text &"added {poc.createdAt.ago}"
+                  tdiv(class="buttons"):
+                    a(class = "button is-small", href = linkToCve):
+                      text "view CVE"
+                    a(class = "button is-small", target = "_blank", rel = "nofollow", href = poc.url):
+                      text "view Exploit"
+
 
 proc renderProduct*(ctx: Context, product: Product, pgn: Pagination[Cve]): VNode =
   buildhtml():
