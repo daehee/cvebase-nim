@@ -1,12 +1,8 @@
 import std/[times, strformat, options, strtabs, strutils, json, sequtils]
-import karax/[karaxdsl, vdom]
 import markdown
 
-import prologue/core/context
-
-import ../models/[cve, pagination]
-import ../helpers/[app_helper, cve_helper]
 import layout_view
+import ../helpers/cve_helper
 
 proc renderSidebar(ctx: Context, cve: Cve): VNode =
   let

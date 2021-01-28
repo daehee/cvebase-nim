@@ -1,10 +1,5 @@
 import std/[strformat, options, strtabs, json]
-import karax/[karaxdsl, vdom, vstyles]
 
-import prologue/core/context
-
-import ../models/[cve]
-import ../helpers/[app_helper]
 import layout_view
 
 

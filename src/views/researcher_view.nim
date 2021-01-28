@@ -1,22 +1,8 @@
 import std/[times, strformat, options, strtabs, strutils, json, sequtils, uri]
-import karax/[karaxdsl, vdom]
-
-import prologue/core/context
-
 import markdown
 
-import ../models/[cve, pagination]
-import ../helpers/[app_helper]
 import layout_view
 
-#      section(class="hero is-black is-medium",id="page-hero"):
-#        tdiv(class="hero-body"):
-#          tdiv(class="container has-text-centered"):
-#            h1(class="title is-2"):
-#              text "Orange Tsai "
-#            h2(class="subtitle is-size-5"):
-#              text "Security Researcher "
-#              span(class="flag-icon flag-icon-tw")
 
 proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): VNode =
   buildHtml():
