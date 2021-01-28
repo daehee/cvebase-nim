@@ -212,7 +212,7 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
               h3:
                 text "Bug Bounty"
               for hacktivity in cve.hacktivities:
-                tdiv(class = "card"):
+                tdiv(class = "card mb-2"):
                   tdiv(class = "card-content has-background-black"):
                     tdiv(class = "content"):
                       p:
