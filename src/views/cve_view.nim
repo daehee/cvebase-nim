@@ -89,6 +89,14 @@ proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
           a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
             text $monthDate
 
+proc renderPocList(url: string): VNode =
+  buildHtml():
+    li:
+      a(target = "_blank", class = "is-size-6 has-text-grey-light", rel = "nofollow", href = url):
+        verbatim peekOutlink(url)
+        span(class = "icon has-text-grey-light is-size-6"):
+          italic(class = "fas fa-external-link-square-alt")
+
 proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
@@ -155,25 +163,43 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                   italic(class="fab fa-github")
                 span():
                   text "Improve Advisory"
+
+            # pocs
+            let pocsCount = len(cve.pocs) # rely on manual count in case db counter_cache is off
+            # header pocs
             h3():
-              text "Proof-of-Concept Exploits"
-            if cve.pocsCount > 0:
-              details():
-                summary():
-                  text &"View list ({cve.pocsCount})"
-                ul(id="pocs"):
-                  for url in cve.pocs.map(proc(x: Poc): string = x.url):
-                    li:
-                      a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
-                        verbatim peekOutlink(url)
-                        span(class="icon has-text-grey-light is-size-6"):
-                          italic(class="fas fa-external-link-square-alt")
+              text &"{cve.cveId} Exploits"
+              if pocsCount > 0:
+                text &" ({pocsCount})"
+
+            # list of pocs
+            if pocsCount > 0:
+              # split sequence of Pocs to shown and hidden
+              var
+                shown = cve.pocs
+                hidden: seq[Poc]
+              if len(cve.pocs) > 10:
+                shown = cve.pocs[0..<10]
+                hidden = cve.pocs[10..<pocsCount]
+
+              ul(id="pocs"):
+                for poc in shown:
+                  renderPocList(poc.url)
+
+              if len(hidden) > 0:
+                details():
+                  summary():
+                    let moreCount = pocsCount - 10
+                    text &"Show all exploits (+{$moreCount}):"
+                  ul(id="pocs-more"):
+                    for poc in hidden:
+                      renderPocList(poc.url)
             p():
               a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/"):
                 span(class="icon"):
                   italic(class="fab fa-github")
                 span():
-                  text "Add PoC"
+                  text "Add Exploit"
 
             # Labs
             if len(cve.labs) > 0:
