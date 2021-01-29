@@ -127,8 +127,8 @@ const
   where (extract(year from published_date) = ?)
   group by month order by month desc""".unindent)
 
-  cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ?")
-  cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ?")
+  cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ? order by created_at desc")
+  cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ? order by created_at desc")
 
   cveCweQuery = sql("select name, description from cwes where id = ?")
 
