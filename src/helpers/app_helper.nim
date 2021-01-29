@@ -1,5 +1,5 @@
 ## Common and reusable code for views
-import uri, strutils, times, strformat, math
+import uri, strutils, strformat
 
 import prologue/core/[context, request]
 

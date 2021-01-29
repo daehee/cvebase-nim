@@ -1,4 +1,4 @@
-import std/[json, strformat, strutils]
+import std/[json, strformat]
 import karax/[karaxdsl, vdom]
 
 import ../models/cve
