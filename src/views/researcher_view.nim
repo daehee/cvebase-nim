@@ -150,8 +150,11 @@ proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], cves: seq[Cv
                     td:
                       a(class = "has-text-white", href = ctx.urlFor("researcher", {"alias": researcher.alias})):
                         text researcher.name
-                    # td():
-                      # span(class="flag-icon flag-icon-au")
+                    td():
+                      if researcher.nationality != "":
+                        span(class = &"flag-icon flag-icon-{researcher.nationality}")
+                      else:
+                        span(class = &"flag-icon flag-icon-us")
 
           br()
           tdiv(class="column is-8"):

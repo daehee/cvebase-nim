@@ -147,7 +147,7 @@ const
   cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in
   (select researcher_id from cves_researchers where cve_id = ?)""")
 
-  researcherLeaderboardQuery = sql("""select alias, name from researchers
+  researcherLeaderboardQuery = sql("""select alias, name, nationality from researchers
   order by cves_count desc limit 25""")
 
   # Get the 10 most recent & unique cves that have researcher credit
@@ -346,7 +346,7 @@ proc getResearchersByCveId*(db: AsyncPool, cveId: int): Future[seq[Researcher]] 
 proc getResearcherLeaderboard*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
   let rows = await db.rows(researcherLeaderboardQuery, @[])
   for item in rows:
-    result.add Researcher(alias: item[0], name: item[1])
+    result.add Researcher(alias: item[0], name: item[1], nationality: item[2])
 
 proc getResearchersCveActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   ## Get latest published Cves having Researcher credits

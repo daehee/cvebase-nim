@@ -9,6 +9,13 @@ const baseUrl = "https://www.cvebase.com"
 proc canonicalUrl*(ctx: Context): string =
   return baseUrl & ctx.request.path
 
+proc isFlagPath*(path: string): bool =
+  let basePath = path.split('/')[1]
+  result = case basePath:
+  # of "": true             # welcome is a flag path
+  of "researcher": true
+  else: false
+
 proc peekOutlink*(url: string): string =
   let parsed = parseUri(url)
   var host = parsed.hostname
