@@ -78,7 +78,11 @@ let
   ]
 
 
-app.use(staticFileMiddleware(cfg.staticDir))
+# staticFileMiddleware only used for development;
+# use nginx to serve static assets when on production
+when not defined(release):
+  app.use(staticFileMiddleware(cfg.staticDir))
+
 app.addRoute(cveRoutes, "/cve")
 app.addRoute(researcherRoutes, "/researcher")
 app.addRoute(productRoutes, "/product")
