@@ -3,6 +3,7 @@ import unittest
 import sequtils, times
 
 import helpers/app_helper
+import helpers/cve_helper
 
 suite "test helpers":
   test "peekOutlink":
@@ -36,3 +37,23 @@ suite "test helpers":
     let test = "In Pulse Secure Pulse Connect Secure (PCS) 8.2 before 8.2R12.1, 8.3 before 8.3R7.1, and 9.0 before 9.0R3.4, an unauthenticated remote attacker can send a specially crafted URI to perform an arbitrary file reading vulnerability ."
     let expected = "In Pulse Secure Pulse Connect Secure (PCS) 8.2 before 8.2R12.1, 8.3 before 8.3R7.1, and 9.0 before 9.0R3.4, an unauthenticated remote attacker can send a specially crafted URI to..."
     check(truncate(test, 180) == expected)
+
+  test "cveSeqToDir":
+    block:
+      let sequence = 2
+      check cveSequenceToDir(sequence) == "0xxx"
+    block:
+      let sequence = 12
+      check cveSequenceToDir(sequence) == "0xxx"
+    block:
+      let sequence = 123
+      check cveSequenceToDir(sequence) == "0xxx"
+    block:
+      let sequence = 1882
+      check cveSequenceToDir(sequence) == "1xxx"
+    block:
+      let sequence = 14882
+      check cveSequenceToDir(sequence) == "14xxx"
+    block:
+      let sequence = 166882
+      check cveSequenceToDir(sequence) == "166xxx"

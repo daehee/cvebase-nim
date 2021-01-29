@@ -191,11 +191,18 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                     for poc in hidden:
                       renderPocList(poc.url)
             p():
-              a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/"):
-                span(class="icon"):
-                  italic(class="fab fa-github")
-                span():
-                  text "Add Exploit"
+              if pocsCount > 0:
+                a(class = "button", target = "_blank", href = cve.repoPath(true)):
+                  span(class = "icon"):
+                    italic(class = "fab fa-github")
+                  span():
+                    text "Add Exploit"
+              else:
+                a(class = "button", target = "_blank", rel = "nofollow", href = "https://github.com/cvebase/cvebase.com/issues"):
+                  span(class = "icon"):
+                    italic(class = "fab fa-github")
+                  span():
+                    text "Add Exploit"
 
             # Labs
             if len(cve.labs) > 0:
