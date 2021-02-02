@@ -66,7 +66,6 @@ type
     bio*: string
     cvesCount*: int
     social*: ResearcherSocial
-    cves*: seq[Cve] # FIXME: self-referencing
 
   ResearcherSocial* = object # FIXME: flatten into Researcher
     website*: Option[string]

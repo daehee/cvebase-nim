@@ -356,18 +356,19 @@ proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.asyn
 
   result = newPagination[Lab](page, resultsPerPage, count, labs)
 
-proc getWelcomeResearchers*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
+proc getWelcomeResearchers*(db: AsyncPool): Future[seq[tuple[researcher: Researcher, cve: Cve]]] {.async.} =
   let researcherRows = await db.rows(sql("select id, alias, name from (select * from researchers order by cves_count desc limit 25) subquery_for_top order by random() limit 3"), @[])
+  var researchers = newSeq[Researcher]()
   for row in researcherRows:
-    result.add Researcher(id: parseInt(row[0]), alias: row[1], name: row[2])
+    researchers.add Researcher(id: parseInt(row[0]), alias: row[1], name: row[2])
 
   # Get 3 random researchers and their latest cve
   let cvesInQuery = &"select {selectCveFields}, cr.researcher_id from cves inner join cves_researchers cr on cves.id = cr.cve_id where cr.researcher_id in"
-  let cveRows = await db.getInQuery(cvesInQuery, result.mapIt($it.id), "published_date desc")
+  let cveRows = await db.getInQuery(cvesInQuery, researchers.mapIt($it.id), "published_date desc")
 
-  for i, item in result.pairs:
+  for i, item in researchers.pairs:
     let match = cveRows.matchInQuery(9, $item.id)
-    result[i].cves.add parseCveRow(match)
+    result.add (researcher: researchers[i], cve: parseCveRow(match))
 
 proc getWelcomeCves*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   # get featured cves

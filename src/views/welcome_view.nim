@@ -3,7 +3,7 @@ import std/[strformat, options, strtabs, json]
 import layout_view
 
 
-proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], hacktivities: seq[Hacktivity]): VNode =
+proc renderWelcome*(ctx: Context, researchers: seq[tuple[researcher: Researcher, cve: Cve]], cves: seq[Cve], hacktivities: seq[Hacktivity]): VNode =
   buildHtml():
     tdiv:
       section(class="hero is-black is-medium",id="welcome-hero"):
@@ -22,7 +22,7 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], 
               text "Share in the passion of the world\'s top Security Researchers. "
           # cards researchers
           tdiv(class="columns is-multiline"):
-            for researcher in researchers:
+            for (researcher, cve) in researchers:
               tdiv(class="column is-one-third"):
                 tdiv(class="card"):
                   header(class="card-header"):
@@ -32,7 +32,6 @@ proc renderWelcome*(ctx: Context, researchers: seq[Researcher], cves: seq[Cve], 
                     tdiv(class="card-header-icon"):
                       span(class="flag-icon flag-icon-us")
                   tdiv(class="card-content has-background-black"):
-                    let cve = researcher.cves[0]
                     p:
                       text &"{cve.cveId}: "
                       text truncate(cve.description, 160)
