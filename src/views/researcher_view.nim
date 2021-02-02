@@ -1,10 +1,12 @@
 import std/[times, strformat, options, strtabs, strutils, json, sequtils, uri]
 import markdown
 
-import layout_view
+import
+  layout_view,
+  poc_partial
 
 
-proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): VNode =
+proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination, pocs: seq[Poc]): VNode =
   buildHtml():
     section(class="section",id="researcher"):
       tdiv(class="container"):
@@ -100,9 +102,22 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
 #                  p(class="title"):
 #                    text "1"
             hr()
-            tdiv(class="block"):
+            br()
+
+            # pocs
+            if len(pocs) > 0:
+              tdiv(class="content block"):
+                h3(class="title is-size-6"):
+                  text &"PoC Exploits by {researcher.name}"
+                ul(id="pocs"):
+                  for poc in pocs:
+                    renderPocList(poc.url)
+              br()
+
+            # cves
+            tdiv(class="content block"):
               h3(class="title is-size-6"):
-                text &"{researcher.name} CVE Credits "
+                text &"CVEs Disclosed by {researcher.name}"
               table(class="table is-fullwidth"):
                 tbody():
                   for cve in pgn.items:
@@ -121,12 +136,13 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                       td():
                         if cve.cvss3.isSome():
                           renderCvssTag(cve.cvss3.get())
+
             tdiv(class="content block"):
               p():
                 small(class="has-text-grey-light"):
                   text "This page is open source. Noticed a typo? Or something missing? "
               p():
-                a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com/blob/main/researcher/orange.md"):
+                a(class="button",rel="nofollow",href="https://github.com/cvebase/cvebase.com"):
                   span(class="icon"):
                     italic(class="fab fa-github")
                   span():

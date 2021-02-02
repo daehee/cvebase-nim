@@ -174,3 +174,16 @@ proc titleTag*(cve: Cve): string =
   if cve.pocsCount > 0:
     let exploits = cve.pocsCount.pluralize("PoC Exploit")
     result.add &" ({exploits} Available)"
+
+
+##
+## Researcher
+##
+
+const
+  selectPocFields = "url, DATE_TRUNC('second', created_at)"
+
+proc getPocs*(researcher: Researcher): Future[seq[Poc]] {.async.} =
+  let rows = await db.rows(sql(&"select {selectPocFields} from pocs where researcher_id = ?"), @[$researcher.id])
+  for row in rows:
+    result.add Poc(url: row[0], createdAt: parsePgDateTime(row[1]))

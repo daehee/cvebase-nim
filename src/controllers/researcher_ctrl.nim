@@ -19,15 +19,17 @@ proc showResearcher*(ctx: Context) {.async.} =
     else:
       pgn = await db.getResearcherCves(researcher.id)
 
+    let pocs = await researcher.getPocs()
+
     ctx.ctxData["title"] = researcher.name
     ctx.ctxData["description"] = researcher.bio.truncate(160)
 
-    resp ctx.renderMain(ctx.renderResearcher(researcher, pgn), renderHero(researcher.name))
+    resp ctx.renderMain(ctx.renderResearcher(researcher, pgn, pocs), renderHero(researcher.name))
   except NotFoundException:
     respDefault Http404
     return
   except PGError:
-    respDefault Http404
+    respDefault Http500
     return
 
 proc showResearcherIndex*(ctx: Context) {.async.} =

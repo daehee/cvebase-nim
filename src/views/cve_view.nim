@@ -1,8 +1,10 @@
 import std/[times, strformat, options, strtabs, strutils, json, sequtils]
 import markdown
 
-import layout_view
-import ../helpers/cve_helper
+import
+  layout_view,
+  poc_partial,
+  ../helpers/cve_helper
 
 proc renderSidebar(ctx: Context, cve: Cve): VNode =
   let
@@ -84,14 +86,6 @@ proc renderCveDateBreadcrumbs(ctx: Context; year, month: string): VNode =
         li():
           a(href = ctx.urlFor("cveMonth", {"year": year, "month": month})):
             text $monthDate
-
-proc renderPocList(url: string): VNode =
-  buildHtml():
-    li:
-      a(target = "_blank", class = "is-size-6 has-text-grey-light", rel = "nofollow", href = url):
-        verbatim peekOutlink(url)
-        span(class = "icon has-text-grey-light is-size-6"):
-          italic(class = "fas fa-external-link-square-alt")
 
 proc renderCve*(
     ctx: Context,
