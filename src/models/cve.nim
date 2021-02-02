@@ -19,13 +19,7 @@ type
     wiki*: JsonNode # wiki_data
     pocsCount*: int
     cweId*: int
-    # End base fields
-    # FIXME: Convert all these optional fields to methods
-    labs*: seq[Lab]
-    products*: seq[Product]
-    hacktivities*: seq[Hacktivity]
 
-  # TODO: convert into method
   Cvss3* = object
     score*: string
     severity*: string
