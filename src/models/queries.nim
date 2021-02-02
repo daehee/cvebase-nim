@@ -336,7 +336,7 @@ proc getCveHacktivities*(db: AsyncPool, limit: int, offset: int = 0): Future[seq
   for i, item in hacktivities.pairs:
     # match cve query results by hacktivity id
     let match = cveRows.matchInQuery(9, item.id)
-    result[i] = CveHacktivity(hacktivity: item, cve: parseCveRow(match))
+    result.add CveHacktivity(hacktivity: item, cve: parseCveRow(match))
 
 proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[CveHacktivity]] {.async.} =
   # populate count and offset variables
