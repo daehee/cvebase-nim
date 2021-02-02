@@ -93,7 +93,16 @@ proc renderPocList(url: string): VNode =
         span(class = "icon has-text-grey-light is-size-6"):
           italic(class = "fas fa-external-link-square-alt")
 
-proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
+proc renderCve*(
+    ctx: Context,
+    cve: Cve,
+    pocs: seq[Poc],
+    researchers: seq[Researcher],
+    cwe: Option[Cwe],
+    labs: seq[Lab],
+    products: seq[Product],
+    hacktivities: seq[Hacktivity]
+  ): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
@@ -115,11 +124,11 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                     text cvss3.severity
             p():
               text cve.description
-            if cve.cwe.isSome():
+            if cwe.isSome():
               h5():
-                text &"Weakness: {cve.cwe.get().name}"
+                text &"Weakness: {cwe.get().name}"
               p():
-                text cve.cwe.get().description
+                text cwe.get().description
             p():
               small(class="has-text-grey-light"):
                 let fmtDate = cve.pubDate.format("yyyy-MM-dd")
@@ -136,11 +145,11 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                       text researcher.name
 
             # Products
-            if len(cve.products) > 0:
+            if len(products) > 0:
               h3:
                 text "Vulnerable Products"
               ul:
-                for product in cve.products:
+                for product in products:
                   li:
                     a(href = ctx.urlFor("product", {"slug": product.slug})):
                       text product.name
@@ -161,7 +170,7 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                   text "Improve Advisory"
 
             # pocs
-            let pocsCount = len(cve.pocs) # rely on manual count in case db counter_cache is off
+            let pocsCount = len(pocs) # rely on manual count in case db counter_cache is off
             # header pocs
             h3():
               text &"{cve.cveId} Exploits"
@@ -172,11 +181,11 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
             if pocsCount > 0:
               # split sequence of Pocs to shown and hidden
               var
-                shown = cve.pocs
+                shown = pocs
                 hidden: seq[Poc]
-              if len(cve.pocs) > 10:
-                shown = cve.pocs[0..<10]
-                hidden = cve.pocs[10..<pocsCount]
+              if len(pocs) > 10:
+                shown = pocs[0..<10]
+                hidden = pocs[10..<pocsCount]
 
               ul(id="pocs"):
                 for poc in shown:
@@ -205,16 +214,16 @@ proc renderCve*(ctx: Context, cve: Cve, researchers: seq[Researcher]): VNode =
                     text "Add Exploit"
 
             # Labs
-            if len(cve.labs) > 0:
+            if len(labs) > 0:
               h3():
                 text "Research Labs"
-              renderCveLabButtons(cve.labs)
+              renderCveLabButtons(labs)
 
             # Hacktivities
-            if len(cve.hacktivities) > 0:
+            if len(hacktivities) > 0:
               h3:
                 text "Bug Bounty"
-              for hacktivity in cve.hacktivities:
+              for hacktivity in hacktivities:
                 tdiv(class = "card mb-2"):
                   tdiv(class = "card-content has-background-black"):
                     tdiv(class = "content"):
@@ -321,7 +330,7 @@ proc renderCveIndex*(ctx: Context, pgn: Pagination, allyears: seq[int]): VNode =
           tdiv(class="column is-2"):
             ctx.renderCveDateSidebar((year: "", monthNum: ""), allYears, newSeq[int]())
 
-proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode =
+proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[tuple[poc: Poc, cve: Cve]]): VNode =
   buildHtml():
     section(class="section",id="pocs-index"):
       tdiv(class="container is-desktop"):
@@ -329,18 +338,18 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[Poc]): VNode
           tdiv(class="column"):
             h2(class="title is-size-4"):
               text "Latest CVE Exploit Activity"
-            for poc in activity:
-              let linkToCve = ctx.urlFor("cve", {"year": $poc.cve.year, "sequence": $poc.cve.sequence})
+            for (poc, cve) in activity:
+              let linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
               tdiv(class="card mb-2"):
                 header(class="card-header"):
                   p(class="card-header-title"):
                     a(class = "has-text-primary-light is-size-5", href = linkToCve):
-                      text &"{poc.cve.cveId}"
+                      text &"{cve.cveId}"
                   tdiv(class="card-header-icon"):
                     tdiv(class="tags"):
-                      if poc.cve.cvss3.isSome():
-                        renderCvssTag(poc.cve.cvss3.get())
-                      if poc.cve.pocsCount == 1:
+                      if cve.cvss3.isSome():
+                        renderCvssTag(cve.cvss3.get())
+                      if cve.pocsCount == 1:
                         span(class = &"tag"):
                           text "FIRST BLOOD"
                 tdiv(class="card-content has-background-black"):

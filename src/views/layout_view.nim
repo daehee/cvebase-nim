@@ -6,13 +6,13 @@ import
   ago
 
 import
-  ../models/[cve, pagination],
+  ../models/[cve, pagination, queries],
   ../helpers/app_helper
 
 export karaxdsl, vdom, vstyles
 export prologue
 export ago
-export cve, pagination
+export cve, pagination, queries
 export app_helper
 
 

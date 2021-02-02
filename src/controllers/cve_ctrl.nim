@@ -4,7 +4,6 @@ import prologue
 
 import
   ../globals,
-  ../db/queries,
   ../views/[layout_view, cve_view]
 
 let currentYear = now().year
@@ -38,11 +37,20 @@ proc showCve*(ctx: Context) {.async.} =
 
   try:
     let cve = await db.getCveBySequence(year, seq)
-    let researchers = await db.getResearchersByCveId(cve.id)
+    let researchers = await cve.getResearchers()
+    let pocs = await cve.getPocs()
+    let labs = await cve.getLabs()
+    let cwe = await cve.getCwe()
+    let products = await cve.getProducts()
+    let hacktivities = await cve.getHacktivities()
+
     ctx.ctxData["title"] = cve.titleTag
     ctx.ctxData["description"] = cve.description.truncate(160)
 
-    resp ctx.renderMain(ctx.renderCve(cve, researchers), renderHero(cve.cveId))
+    resp ctx.renderMain(
+      ctx.renderCve(cve, pocs, researchers, cwe, labs, products, hacktivities),
+      renderHero(cve.cveId)
+    )
   except NotFoundException:
     respDefault Http404
     return

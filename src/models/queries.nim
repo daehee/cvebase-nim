@@ -1,7 +1,8 @@
 import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils, sequtils]
 
-import ./pg
-import ../models/[cve, pagination]
+import
+  ../db/pg,
+  cve, pagination
 
 export PGError
 
@@ -13,27 +14,7 @@ type
 #  let layout = "yyyy-MM-dd'T'HH:mm'Z'"
 #  s.parse(layout, utc())
 
-const pgDateLayout = "yyyy-MM-dd HH:mm:ss"
-
-proc parsePgDateTime*(s: string): DateTime =
-  # Example: "2006-01-02 15:15:00"
-  let layout = pgDateLayout
-  s.parse(layout, utc())
-
 ## Cve
-
-proc parseCvss3(data: JsonNode): Option[Cvss3] =
-  let score = data["impact"]["baseMetricV3"]["cvssV3"]["baseScore"].getFloat()
-  if score > 0:
-    let cvss3 = Cvss3(
-      score: if score == 10: "10" else: $score.formatFloat(ffDecimal, 1),
-      severity: data["impact"]["baseMetricV3"]["cvssV3"]["baseSeverity"].getStr()
-    )
-    result = some(cvss3)
-
-proc parseCvePocsCount(data: string): int =
-  # initialize with 0 if cve_pocs_count column is NULL
-  result = if data == "": 0 else: parseInt(data)
 
 proc parseCveRow(row: Row): Cve {.inline.} =
   result.id = parseInt(row[0])  # primary key; field idx 0
@@ -42,63 +23,28 @@ proc parseCveRow(row: Row): Cve {.inline.} =
   result.sequence = parseInt(row[3])
   result.pubDate = parsePgDateTime(row[4])
 
-  result.pocsCount = parseCvePocsCount(row[6])
-
   let cveData = row[5]
-  if cveData != "":
-    let cveDataJson = parseJson(cveData)
-    result.description = cveDataJson["cve"]["description"]["description_data"][0]["value"].getStr()
+  result.data = if cveData == "": newJObject() else: parseJson(cveData)
 
-    if len(cveDataJson["cve"]["references"]["reference_data"]) > 0:
-      for item in cveDataJson["cve"]["references"]["reference_data"]:
-        result.refUrls.add(item["url"].getStr())
+  let wikiData = row[6]
+  result.wiki = if wikiData == "": newJObject() else: parseJson(wikiData)
 
-    # CVSS3 data if exists
-    result.cvss3 = parseCvss3(cveDataJson)
-  else:
-    let fmtDate = result.pubDate.format("MMM d, yyyy")
-    result.description = (&"""{result.cveId} is reserved and pending public disclosure since {fmtDate}.
-      When the official advisory for {result.cveId} is released, details such as weakness type and vulnerability scoring
-      will be provided here.""").unindent.replace("\n", " ")
+  let pocsCount = row[7]
+  result.pocsCount = if pocsCount == "": 0 else: parseInt(pocsCount)
 
+  let cweId = row[8]
+  result.cweId = if cweId == "": 0 else: parseInt(cweId)
 
-proc parsePocs(rows: seq[Row]): seq[Poc] {.inline.} =
-  for row in rows:
-    result.add Poc(url: row[0])
-
-proc parseLabVendor(url: string): string =
-  if url.contains("pentesterlab"): "PentesterLab"
-  elif url.contains("vulhub"): "Vulhub"
-  elif url.contains("hackthebox"): "Hack The Box"
-  elif url.contains("tryhackme"): "TryHackMe"
-  else: ""
-
-proc parseLabs(rows: seq[Row]): seq[Lab] =
-  for row in rows:
-    let url = row[0]
-    result.add Lab(url: url, vendor: parseLabVendor(url))
-
-proc parseCwe(rows: seq[Row]): Cwe =
-  Cwe(name: rows[0][0], description: rows[0][1])
-
-proc parseCveProducts(rows: seq[Row]): seq[Product] =
-  for row in rows:
-    result.add Product(name: row[0], slug: row[1])
-
-proc parseCveHacktivities(rows: seq[Row]): seq[Hacktivity] =
-  # title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed
-  for row in rows:
-    result.add Hacktivity(title: row[0], researcher: row[1], url: row[2], vendor: row[3], vendorHandle: row[4], submittedAt: parsePgDateTime(row[5]), disclosedAt: parsePgDateTime(row[6]))
 
 const
   resultsPerPage = 10
 
-  selectCvesIndexFields = "select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count"
-  selectCvesJoinsFields = "select cves.id, cves.cve_id, year, sequence, published_date, data, cve_pocs_count"
+  # 9 items
+  selectCveFields = "cves.id, cves.cve_id, year, sequence, published_date, data, wiki_data, cve_pocs_count, cwe_id"
 
-  cveBySequenceQuery = sql(selectCvesIndexFields & ", wiki_data, cwe_id from cves where year = ? and sequence = ?")
+  cveBySequenceQuery = sql(&"select {selectCveFields} from cves where year = ? and sequence = ?")
 
-  cvesByYearQuery = sql((selectCvesIndexFields & """ from cves
+  cvesByYearQuery = sql((&"""select {selectCveFields} from cves
     where extract(year from published_date) = ?
     order by cve_pocs_count
     desc nulls last
@@ -106,13 +52,13 @@ const
   cvesByYearCountQuery = sql("select count(*) from cves where extract(year from published_date) = ?")
 
   # Cve.where(published_date: d.beginning_of_month.beginning_of_day..d.end_of_month.end_of_day).order('published_date DESC')
-  cvesByMonthQuery = sql((selectCvesIndexFields & """ from cves
+  cvesByMonthQuery = sql((&"""select {selectCveFields} from cves
     where published_date between ? and ?
     order by published_date desc
     limit 10 offset ?""").unindent.replace("\n", " "))
   cvesByMonthCountQuery = sql("select count(*) from cves where published_date between ? and ?")
 
-  cvesIndexQuery = sql((selectCvesIndexFields & """ from cves
+  cvesIndexQuery = sql((&"""select {selectCveFields} from cves
     where featured_at is not NULL
     order by featured_at desc
     limit 10 offset ?""").unindent.replace("\n", " "))
@@ -127,16 +73,11 @@ const
   where (extract(year from published_date) = ?)
   group by month order by month desc""".unindent)
 
-  cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ? order by created_at desc")
-  cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ? order by created_at desc")
-
-  cveCweQuery = sql("select name, description from cwes where id = ?")
-
   researcherQuery = sql("""select id, name, alias, nationality, bio, cves_count,
     website, twitter, github, linkedin, hackerone, bugcrowd
     from researchers where slug = ?""")
 
-  researcherCvesQuery  = sql((selectCvesJoinsFields & """ from cves
+  researcherCvesQuery  = sql((&"""select {selectCveFields} from cves
   INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
   where cves_researchers.researcher_id = ?
   order by published_date desc limit 10 offset ?""").unindent.replace("\n", " "))
@@ -144,30 +85,26 @@ const
   INNER JOIN cves_researchers ON cves.id = cves_researchers.cve_id
   WHERE cves_researchers.researcher_id = ?""".unindent.replace("\n", " "))
 
-  cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in
-  (select researcher_id from cves_researchers where cve_id = ?)""")
-
   researcherLeaderboardQuery = sql("""select alias, name, nationality from researchers
   order by cves_count desc limit 25""")
 
   # Get the 10 most recent & unique cves that have researcher credit
-  researchersCveActivityQuery = sql("""SELECT DISTINCT cves.id, cves.cve_id, cves.year, cves.sequence, cves.published_date, cves.data, cves.cve_pocs_count FROM cves
+  researchersCveActivityQuery = sql((&"""SELECT DISTINCT {selectCveFields} FROM cves
   INNER JOIN cves_researchers ON cves_researchers.cve_id = cves.id
   INNER JOIN researchers ON researchers.id = cves_researchers.researcher_id
-  ORDER BY published_date DESC LIMIT 10""".unindent.replace("\n", " "))
-#  researchersInQuery = sql("""select id, alias, name from researchers where id in ({})""")
+  ORDER BY published_date DESC LIMIT 10""").unindent.replace("\n", " "))
 
-  pocLeaderboardQuery = sql(selectCvesIndexFields & """ from cves
-  order by cve_pocs_count desc nulls last limit 25""")
+  pocLeaderboardQuery = sql((&"""select {selectCveFields} from cves
+  order by cve_pocs_count desc nulls last limit 25"""))
 
-  cvesPocActivityQuery = sql(selectCvesIndexFields & """ from cves
+  cvesPocActivityQuery = sql((&"""select {selectCveFields} from cves
   where cves.id in
-  (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10""")
+  (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10"""))
 
-  pocActivityQuery = sql("""select url, DATE_TRUNC('second', cr.created_at), c.cve_id, year, sequence, data, cve_pocs_count from cve_references cr
-  inner join cves c on c.id = cr.cve_id
+  pocActivityQuery = sql((&"""select url, DATE_TRUNC('second', cr.created_at), {selectCveFields} from cve_references cr
+  inner join cves on cves.id = cr.cve_id
   where cr.type = 'CvePoc'
-  order by cr.created_at desc limit 25""".unindent.replace("\n", " "))
+  order by cr.created_at desc limit 25""").unindent.replace("\n", " "))
 
   productQuery = sql("select id, name, slug from products where slug = ?")
   productByIdQuery = sql("select slug from products where id = ?")
@@ -175,12 +112,11 @@ const
   cvesProductsJoin = """INNER JOIN cves_products ON cves.id = cves_products.cve_id
     where cves_products.product_id = ?"""
 
-  productCvesQuery  = sql((selectCvesJoinsFields & " from cves " &
+  productCvesQuery  = sql((&"select {selectCveFields} from cves " &
     cvesProductsJoin & " order by published_date desc limit 10 offset ?").unindent.replace("\n", " "))
 
   productCvesCountQuery = sql("select count(*) FROM cves " & cvesProductsJoin)
 
-  cveProductsQuery = sql("select name, slug from products inner join cves_products cp on products.id = cp.product_id where cp.cve_id = ?")
 
   # hacktivities
   hacktivitiesFields = "title, researcher, url, vendor, vendor_handle, DATE_TRUNC('second', submitted_at), DATE_TRUNC('second', disclosed_at) as disclosed"
@@ -190,45 +126,19 @@ const
     joinHacktivitiesCves & " order by disclosed desc limit ? offset ?"))
   hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
 
-  cveHacktivitiesQuery = sql(&"select {hacktivitiesFields} from hacktivities inner join cves_hacktivities cp on hacktivities.id = cp.hacktivity_id where cp.cve_id = ?")
 
   labsActivityCountQuery = sql("select count(*) from cves inner join cve_references cr on cves.id = cr.cve_id where cr.type = 'CveCourse'")
-  labsActivityQuery = sql(selectCvesIndexFields & """, cr.url from cves
+  labsActivityQuery = sql((&"""select {selectCveFields}, cr.url from cves
     inner join cve_references cr on cves.id = cr.cve_id
     where cr.type = 'CveCourse'
-    order by published_date desc limit ? offset ?""")
+    order by published_date desc limit ? offset ?"""))
 
 
 proc getCveBySequence*(db: AsyncPool; year, seq: int): Future[Cve] {.async.} =
   let rows = await db.rows(cveBySequenceQuery, @[$year, $seq])
   if len(rows) == 0:
     raise newException(NotFoundException, &"CVE-{$year}-{$seq} not found")
-
-  let
-    data = rows[0]
-    wikiData = data[7]
-    cweId = data[8]
-
-  # Build basic Cve object
-  result = parseCveRow(data)
-
-
-  # Append rest of fields; join queries
-  # cwe
-  if cweId.len() > 0:
-    result.cwe = parseCwe(await db.rows(cveCweQuery, @[cweId])).some()
-  # pocs
-  result.pocs = parsePocs(await db.rows(cvePocsQuery, @[$result.id]))
-  # labs
-  result.labs = parseLabs(await db.rows(cveLabsQuery, @[$result.id]))
-  # wiki
-  result.wiki = newJObject() # initialize wiki JsonNode field to prevent SIGSEGV on null
-  if wikiData != "": # need to check for null column value
-    result.wiki = parseJson(wikiData)
-  # products
-  result.products = parseCveProducts(await db.rows(cveProductsQuery, @[$result.id]))
-  # hacktivities
-  result.hacktivities = parseCveHacktivities(await db.rows(cveHacktivitiesQuery, @[$result.id]))
+  result = parseCveRow(rows[0])
 
 ## Helper functions
 
@@ -276,6 +186,7 @@ proc getCvesIndex*(db: AsyncPool; page: int = 1): Future[Pagination[Cve]] {.asyn
   for item in rows:
     result.items.add parseCveRow(item)
 
+# TODO: Cache this
 proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(cvesByYearCountQuery, @[$year], page)
   let rows = await db.rows(cvesByYearQuery, @[$year, $offset])
@@ -284,6 +195,7 @@ proc getCvesByYear*(db: AsyncPool; year: int; page: int = 1): Future[Pagination[
   for item in rows:
     result.items.add parseCveRow(item)
 
+# TODO: Cache this
 proc getCvesByMonth*(db: AsyncPool; year: int, month: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   let monthDate = initDateTime(01, Month(month), year, 00, 00, 00, utc())
   let lastDayOfMonth = monthDate.month.getDaysInMonth(year)
@@ -299,11 +211,13 @@ proc getCvesByMonth*(db: AsyncPool; year: int, month: int; page: int = 1): Futur
   for item in rows:
     result.items.add parseCveRow(item)
 
+# TODO: Cache this
 proc getCveYears*(db: AsyncPool): Future[seq[int]] {.async.} =
   let rows = await db.rows(cveYearsQuery, @[])
   for row in rows:
     result.add parseInt(row[0])
 
+# TODO: Cache this
 proc getCveYearMonths*(db: AsyncPool, year: int): Future[seq[int]] {.async.} =
   let rows = await db.rows(cveYearMonthsQuery, @[$year])
   for row in rows:
@@ -331,6 +245,7 @@ proc getResearcher*(db: AsyncPool; alias: string): Future[Researcher] {.async.} 
     bugcrowd: data[11].fieldOption,
   )
 
+# TODO: Move this into method on Researcher
 proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(researcherCvesCountQuery, @[$rId], page)
   let rows = await db.rows(researcherCvesQuery, @[$rId, $offset])
@@ -338,44 +253,34 @@ proc getResearcherCves*(db: AsyncPool, rId: int; page: int = 1): Future[Paginati
   for item in rows:
     result.items.add parseCveRow(item)
 
-proc getResearchersByCveId*(db: AsyncPool, cveId: int): Future[seq[Researcher]] {.async.} =
-  let rows = await db.rows(cveResearchersQuery, @[$cveId])
-  for item in rows:
-    result.add Researcher(alias: item[0], name: item[1])
-
 proc getResearcherLeaderboard*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
   let rows = await db.rows(researcherLeaderboardQuery, @[])
   for item in rows:
     result.add Researcher(alias: item[0], name: item[1], nationality: item[2])
 
-proc getResearchersCveActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
+proc getResearchersCveActivity*(db: AsyncPool): Future[seq[tuple[researcher: Researcher, cve: Cve]]] {.async.} =
   ## Get latest published Cves having Researcher credits
   let rows = await db.rows(researchersCveActivityQuery, @[])
   for row in rows:
-    result.add parseCveRow(row)
+    result.add (researcher: Researcher(), cve: parseCveRow(row))
 
-  let researcherRows = await db.getInQuery("select researchers.id, alias, name, ch.cve_id from researchers inner join cves_researchers ch on researchers.id = ch.researcher_id where ch.cve_id in", result.mapIt($it.id))
+  let researcherRows = await db.getInQuery("select researchers.id, alias, name, ch.cve_id from researchers inner join cves_researchers ch on researchers.id = ch.researcher_id where ch.cve_id in", result.mapIt($it.cve.id))
   for i, item in result.pairs:
-    let match = researcherRows.matchInQuery(3, $item.id)
-    result[i].researchers.add Researcher(alias: match[1], name: match[2])
+    let match = researcherRows.matchInQuery(3, $item.cve.id)
+    result[i].researcher = Researcher(alias: match[1], name: match[2])
 
 proc getPocLeaderboard*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   let rows = await db.rows(pocLeaderboardQuery, @[])
   for item in rows:
     result.add parseCveRow(item)
 
-proc getPocActivity*(db: AsyncPool): Future[seq[Poc]] {.async.} =
+proc getPocActivity*(db: AsyncPool): Future[seq[tuple[poc: Poc, cve: Cve]]] {.async.} =
+  ## Returns sequence of tuple containing
   let rows = await db.rows(pocActivityQuery, @[])
   for row in rows:
-    let cveData = row[5]
-    let cve = Cve(
-      cveId: row[2],
-      year: parseInt(row[3]),
-      sequence: parseInt(row[4]),
-      cvss3: if cveData != "": parseJson(cveData).parseCvss3() else: none(Cvss3),
-      pocsCount: parseCvePocsCount(row[6])
-    )
-    result.add Poc(url: row[0], createdAt: parsePgDateTime(row[1]), cve: cve)
+    let cve = parseCveRow(row[2..10])
+    let poc = Poc(url: row[0], createdAt: parsePgDateTime(row[1]))
+    result.add (poc: poc, cve: cve)
 
 proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   ## Deprecated: Use getPocActivity instead
@@ -425,12 +330,12 @@ proc getHacktivities*(db: AsyncPool, limit: int, offset: int = 0): Future[seq[Ha
 proc getHacktivitiesCves*(db: AsyncPool, limit: int, offset: int = 0): Future[seq[Hacktivity]] {.async.} =
   result = await db.getHacktivities(limit, offset)
   # query basic cve data to append to Hacktivity objects
-  let cvesInQuery = selectCvesJoinsFields & ", ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in"
+  let cvesInQuery = &"select {selectCveFields}, ch.hacktivity_id from cves inner join cves_hacktivities ch on cves.id = ch.cve_id where ch.hacktivity_id in"
   let cveRows = await db.getInQuery(cvesInQuery, result.mapIt(it.id))
 
   for i, item in result.pairs:
     # match cve query results by hacktivity id
-    let match = cveRows.matchInQuery(7, item.id)
+    let match = cveRows.matchInQuery(9, item.id)
     result[i].cve = parseCveRow(match)
 
 proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[Hacktivity]] {.async.} =
@@ -446,8 +351,8 @@ proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.asyn
 
   var labs: seq[Lab]
   for i, row in rows.pairs:
-    let labUrl = row[7]
-    labs.add Lab(url: labUrl, vendor: parseLabVendor(labUrl), cve: parseCveRow(row))
+    let labUrl = row[9]
+    labs.add Lab(url: labUrl, vendor: labUrl.toLabVendor(), cve: parseCveRow(row))
 
   result = newPagination[Lab](page, resultsPerPage, count, labs)
 
@@ -457,16 +362,16 @@ proc getWelcomeResearchers*(db: AsyncPool): Future[seq[Researcher]] {.async.} =
     result.add Researcher(id: parseInt(row[0]), alias: row[1], name: row[2])
 
   # Get 3 random researchers and their latest cve
-  let cvesInQuery = selectCvesJoinsFields & ", cr.researcher_id from cves inner join cves_researchers cr on cves.id = cr.cve_id where cr.researcher_id in"
+  let cvesInQuery = &"select {selectCveFields}, cr.researcher_id from cves inner join cves_researchers cr on cves.id = cr.cve_id where cr.researcher_id in"
   let cveRows = await db.getInQuery(cvesInQuery, result.mapIt($it.id), "published_date desc")
 
   for i, item in result.pairs:
-    let match = cveRows.matchInQuery(7, $item.id)
+    let match = cveRows.matchInQuery(9, $item.id)
     result[i].cves.add parseCveRow(match)
 
 proc getWelcomeCves*(db: AsyncPool): Future[seq[Cve]] {.async.} =
   # get featured cves
-  let rows = await db.rows(sql(selectCvesIndexFields & " from cves where featured_at is not null order by featured_at desc limit 4"), @[])
+  let rows = await db.rows(sql(&"select {selectCveFields} from cves where featured_at is not null order by featured_at desc limit 4"), @[])
   for row in rows:
     result.add parseCveRow(row)
 

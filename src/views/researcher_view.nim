@@ -132,7 +132,7 @@ proc renderResearcher*(ctx: Context, researcher: Researcher, pgn: Pagination): V
                   span():
                     text "Improve this page"
 
-proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], cves: seq[Cve]): VNode =
+proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], activity: seq[tuple[researcher: Researcher, cve: Cve]]): VNode =
   buildHtml():
     section(class="section",id="researcher-index"):
       tdiv(class="container is-desktop"):
@@ -160,12 +160,14 @@ proc renderResearcherIndex*(ctx: Context, leaders: seq[Researcher], cves: seq[Cv
           tdiv(class="column is-8"):
             h2(class="title is-size-4"):
               text "Latest Researcher Activity "
-            for cve in cves:
+            for item in activity:
+              let
+                researcher = item.researcher
+                cve = item.cve
               tdiv(class="card researcher-activity-card"):
                 header(class="card-header"):
                   p(class="card-header-title is-size-5"):
                     span(class="researcher-name"):
-                      let researcher = cve.researchers[0]
                       a(class = "has-text-primary", href = ctx.urlFor("researcher", {"alias": researcher.alias})):
                         text researcher.name
                     span(class="researcher-cve"):
