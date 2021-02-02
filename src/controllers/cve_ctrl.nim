@@ -219,7 +219,7 @@ proc showProduct*(ctx: Context) {.async.} =
 
 proc showHacktivities*(ctx: Context) {.async.} =
   let pageParam = ctx.getQueryParams("page")
-  var pgn: Pagination[Hacktivity]
+  var pgn: Pagination[CveHacktivity]
   # get related Cves
   if pageParam != "":
     let pageNum = parseInt(pageParam)

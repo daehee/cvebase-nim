@@ -395,24 +395,27 @@ proc renderProduct*(ctx: Context, product: Product, pgn: Pagination[Cve]): VNode
             hr()
             ctx.renderPagination(pgn, "product", {"slug": product.slug})
 
-proc renderHacktivities*(ctx: Context, pgn: Pagination[Hacktivity]): VNode =
+proc renderHacktivities*(ctx: Context, pgn: Pagination[CveHacktivity]): VNode =
   buildhtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
             tdiv(class="columns is-multiline"):
-              for hacktivity in pgn.items:
-                let linkToCve = ctx.urlFor("cve", {"year": $hacktivity.cve.year, "sequence": $hacktivity.cve.sequence})
+              for item in pgn.items:
+                let
+                  hacktivity = item.hacktivity
+                  cve = item.cve
+                  linkToCve = ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})
                 tdiv(class="column is-half"):
                   tdiv(class="card"):
                     header(class="card-header"):
                       p(class="card-header-title"):
                         a(class = "has-text-primary-light is-size-5", href = linkToCve):
-                          text hacktivity.cve.cveId
+                          text cve.cveId
                       tdiv(class="card-header-icon"):
-                        if hacktivity.cve.cvss3.isSome():
-                          renderCvssTag(hacktivity.cve.cvss3.get())
+                        if cve.cvss3.isSome():
+                          renderCvssTag(cve.cvss3.get())
                     tdiv(class="card-content has-background-black"):
                       tdiv(class="content"):
                         p:

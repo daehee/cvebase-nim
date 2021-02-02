@@ -3,7 +3,7 @@ import std/[strformat, options, strtabs, json]
 import layout_view
 
 
-proc renderWelcome*(ctx: Context, researchers: seq[tuple[researcher: Researcher, cve: Cve]], cves: seq[Cve], hacktivities: seq[Hacktivity]): VNode =
+proc renderWelcome*(ctx: Context, researchers: seq[tuple[researcher: Researcher, cve: Cve]], cves: seq[Cve], hacktivities: seq[CveHacktivity]): VNode =
   buildHtml():
     tdiv:
       section(class="hero is-black is-medium",id="welcome-hero"):
@@ -69,12 +69,15 @@ proc renderWelcome*(ctx: Context, researchers: seq[tuple[researcher: Researcher,
               text "Follow these proven ways to make money with Bug Bounty. "
           # cards hacktivities
           tdiv(class="block"):
-            for hacktivity in hacktivities:
+            for item in hacktivities:
+              let
+                cve = item.cve
+                hacktivity = item.hacktivity
               article(class="media article-hacktivity"):
                 tdiv(class="media-content"):
                   tdiv(class="content"):
                     p:
-                      a(class="has-text-white",href= ctx.urlFor("cve", {"year": $hacktivity.cve.year, "sequence": $hacktivity.cve.sequence})):
+                      a(class="has-text-white",href= ctx.urlFor("cve", {"year": $cve.year, "sequence": $cve.sequence})):
                         text hacktivity.title
                       small(style = "margin-bottom: .5rem".toCss, class = "has-text-grey-light"):
                         text &"disclosed {hacktivity.disclosedAt.ago} by {hacktivity.researcher}"

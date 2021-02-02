@@ -56,7 +56,10 @@ type
     vendorHandle*: string
     submittedAt*: DateTime
     disclosedAt*: DateTime
-    cve*: Cve # FIXME: decouple
+
+  CveHacktivity* = object
+    cve*: Cve
+    hacktivity*: Hacktivity
 
   Researcher* = object
     id*: int # db primary key
