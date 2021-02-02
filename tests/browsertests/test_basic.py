@@ -12,6 +12,7 @@ routes = [
     ['poc'],
     ['lab'],
     ['bugbounty'],
+    ['product/microsoft-windows_xp'],
 ]
 
 class SmokeTest(BaseTestCase):
