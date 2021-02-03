@@ -8,7 +8,7 @@ import
 import
   globals,
   config,
-  controllers/[cve_ctrl, researcher_ctrl, error_ctrl, welcome_ctrl]
+  controllers/[cve_ctrl, researcher_ctrl, error_ctrl, welcome_ctrl, search_ctrl]
 from db/pg import newAsyncPool
 
 
@@ -89,7 +89,9 @@ app.addRoute(productRoutes, "/product")
 app.addRoute(pocRoutes, "/poc")
 app.addRoute("/bugbounty", showHacktivities, HttpGet, "hacktivityIndex")
 app.addRoute("/lab", showLabs, HttpGet, "labIndex")
-app.addRoute(cnvdRoutes, "/cnvd") # Redirect all CNVD to CVE index
+app.addRoute(cnvdRoutes, "/cnvd")             # Redirect all CNVD to CVE index
+app.addRoute("/search", searchCve, HttpGet)   # TODO: Implement searchAll, including Researcher
 app.addRoute("/", showWelcome, HttpGet, "welcome")
 app.registerErrorHandler(Http404, go404)
+# TODO: Register Http500 error handler and update browsertests
 app.run()

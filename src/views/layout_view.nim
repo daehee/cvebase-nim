@@ -50,6 +50,7 @@ proc renderHead*(ctx: Context): VNode =
       verbatim gaScript
     # TODO add og and twitter meta tags
 
+
 proc renderNavBar*(): VNode =
   buildHtml():
     nav(class = "main-nav navbar is-black is-spaced", style = "border: none".toCss):
@@ -61,6 +62,16 @@ proc renderNavBar*(): VNode =
             span(aria-hidden="true")
             span(aria-hidden="true")
             span(aria-hidden="true")
+        tdiv(id="navbarMenuIndex", class="navbar-menu"):
+          tdiv(class="navbar-start"):
+            tdiv(class="navbar-item"):
+              form(accept-charset="UTF-8", action="/search", `method`="get"):
+                tdiv(class="field has-addons"):
+                  p(class="control is-expanded"):
+                    input(class="input", placeholder="Search by CVE ID", value="", name="query", id="query")
+                  p(class="control"):
+                    button(class="button is-primary", `type`="submit"):
+                      verbatim "<span class=\"icon\"><i class=\"fas fa-search\"></i></span>"
         tdiv(class="navbar-menu",id="navbarMenuIndex"):
           tdiv(class="navbar-start"):
             tdiv(class="navbar-item")
