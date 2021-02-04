@@ -1,7 +1,7 @@
 import std/[times, options, strformat, strtabs, json, strutils, asyncdispatch]
 
 import
-  ../db/pg,
+  ../db/[pg, dbutils],
   ../globals,
   ../helpers/app_helper
 

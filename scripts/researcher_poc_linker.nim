@@ -1,20 +1,10 @@
 import os, strformat, strutils, uri, db_postgres
 
-proc parseDbUrl*(dbUrl: string): string =
-  ## Converts Postgres database URL to keyword/value connection string
-  let
-    uri = parseUri(dbUrl)
-    database = strip(uri.path, chars={'/'})
-
-  result.add &"user = {uri.username} password = {uri.password} host = {uri.hostname} port = {uri.port} dbname = {database}"
-
-  if uri.query == "sslmode=require":
-    result.add " sslmode = require"
+import db/dbutils
 
 let
   connStr = parseDbUrl(getEnv("DATABASE_URL", ""))
   db = db_postgres.open("", "", "", connStr)
-
 
 # check each researcher github profile against pocs database
 let rows1 = db.getAllRows(sql"select id, github from researchers where github <> ''")

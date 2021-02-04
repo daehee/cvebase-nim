@@ -1,7 +1,7 @@
 # https://github.com/treeform/pg
 # Simple async driver for postgress
 
-import asyncdispatch, logging, strformat, times
+import asyncdispatch, logging, strformat
 include db_postgres
 
 type
@@ -107,11 +107,3 @@ proc exec*(
 proc close*(pool: AsyncPool) {.async.} =
   for conn in pool.conns:
     conn.close()
-
-
-const pgDateLayout* = "yyyy-MM-dd HH:mm:ss"
-
-proc parsePgDateTime*(s: string): DateTime =
-  # Example: "2006-01-02 15:15:00"
-  let layout = pgDateLayout
-  s.parse(layout, utc())

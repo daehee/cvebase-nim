@@ -1,7 +1,7 @@
 import std/[asyncdispatch, json, tables, times, strutils, options, strformat, strutils, sequtils]
 
 import
-  ../db/pg,
+  ../db/[pg, dbutils],
   cve, pagination
 
 export PGError
