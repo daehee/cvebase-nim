@@ -101,7 +101,7 @@ proc renderCve*(
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
-        tdiv(class="column is-9"):
+        tdiv(class="column is-8"):
           ctx.renderCveDateBreadcrumbs(cve)
           tdiv(class="content",id="description"):
             if cve.cvss3.isSome():
