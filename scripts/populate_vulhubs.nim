@@ -30,12 +30,15 @@ proc rewriteReadme(content: string, subDir: string): string =
   # ^\[([\w\s\d]+)\]\(((?:\/|https?:\/\/)[\w\d./?=#]+)\)$
   # replace image src from relative to absolute
   # !\[[^\]]*\]\((?<filename>.*?)(?=\"|\))\)
+  result = content
 
   let rawBaseUrl = &"https://raw.githubusercontent.com/vulhub/vulhub/master/{subDir}"
   let imgRx = re"""!\[[^\]]*\]\((?<filename>.*?)(?=\"|\))\)"""
-  let linkRx = re"""\[(.+)\]\((.+)\)(\n\n)?"""
-  result = content.replace(linkRx, &"")
+#  let linkRx = re"""[^!]?\[(.+)\]\((.+)\)"""
   result = result.replacef(imgRx, &"![]({rawBaseUrl}/$1)")
+#  result = content.replace(linkRx, "")
+  result = result.replace("[中文版本(Chinese version)](README.zh-cn.md)", "")
+  result = strip(result)
 
 
 type
@@ -59,8 +62,9 @@ when isMainModule:
   for row in rows1:
     vulhubs.add Vulhub(rowId: row[0], url: row[1], readmeRaw: row[2])
 
+  echo &"{len(vulhubs)} vulhubs"
+
   when defined(populate):
-    echo &"populating {len(vulhubs)} vulhubs"
 
     var cl = newGithubApiClient(token)
     for vulhub in vulhubs:
@@ -85,6 +89,8 @@ when isMainModule:
           e = getCurrentException()
           msg = getCurrentExceptionMsg()
         echo "Got exception ", repr(e), " with message ", msg
+
+      echo &"{vulhub.rowId}: {vulhub.url}"
 
   echo "done"
   db.close()

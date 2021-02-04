@@ -43,12 +43,13 @@ proc showCve*(ctx: Context) {.async.} =
     let cwe = await cve.getCwe()
     let products = await cve.getProducts()
     let hacktivities = await cve.getHacktivities()
+    let vulhub = await cve.getVulhub()
 
     ctx.ctxData["title"] = cve.titleTag
     ctx.ctxData["description"] = cve.description.truncate(160)
 
     resp ctx.renderMain(
-      ctx.renderCve(cve, pocs, researchers, cwe, labs, products, hacktivities),
+      ctx.renderCve(cve, pocs, researchers, cwe, labs, products, hacktivities, vulhub),
       renderHero(cve.cveId)
     )
   except NotFoundException:

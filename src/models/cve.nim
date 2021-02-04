@@ -78,6 +78,9 @@ type
     hackerone*: Option[string]
     bugcrowd*: Option[string]
 
+  Vulhub* = object
+    url*: string
+    readme*: string
 
 ##
 ## Cve
@@ -142,6 +145,15 @@ proc getHacktivities*(cve: Cve): Future[seq[Hacktivity]] {.async.} =
       submittedAt: parsePgDateTime(row[5]),
       disclosedAt: parsePgDateTime(row[6])
     )
+
+proc getVulhub*(cve: Cve): Future[Option[Vulhub]] {.async.} =
+  let rows = await db.rows(sql"select url, readme from vulhubs where cve_id = ? limit 1", @[$cve.id])
+
+  if len(rows) > 0:
+    result = Vulhub(
+      url: rows[0][0],
+      readme: rows[0][1]
+    ).some()
 
 proc description*(cve: Cve): string =
   if cve.data.hasKey("cve") and len(cve.data["cve"]["description"]["description_data"]) > 0:

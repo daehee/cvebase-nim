@@ -95,7 +95,8 @@ proc renderCve*(
     cwe: Option[Cwe],
     labs: seq[Lab],
     products: seq[Product],
-    hacktivities: seq[Hacktivity]
+    hacktivities: seq[Hacktivity],
+    vulhub: Option[Vulhub]
   ): VNode =
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
@@ -213,6 +214,16 @@ proc renderCve*(
                 text "Research Labs"
               renderCveLabButtons(labs)
 
+            if vulhub.isSome():
+              let lab = vulhub.get()
+              h3:
+                text &"{cve.cveId} Vulhub"
+              p:
+                small(class="has-text-grey-light"):
+                  text "Vulhub is an open-source collection of Docker-ized vulnerability environments. No pre-existing knowledge of Docker is required, just execute two simple commands and you have a vulnerable environment."
+              verbatim markdown(lab.readme)
+
+
             # Hacktivities
             if len(hacktivities) > 0:
               h3:
@@ -235,7 +246,7 @@ proc renderCve*(
 
 
             h3():
-              text "Official References"
+              text "Official CVE References"
             details():
               summary():
                 text "View list"
