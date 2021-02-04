@@ -101,7 +101,7 @@ proc renderCve*(
   buildHtml(section(class="section")):
     tdiv(class="container is-desktop"):
       tdiv(class="columns"):
-        tdiv(class="column"):
+        tdiv(class="column is-9"):
           ctx.renderCveDateBreadcrumbs(cve)
           tdiv(class="content",id="description"):
             if cve.cvss3.isSome():
@@ -209,19 +209,26 @@ proc renderCve*(
                     text "Add Exploit"
 
             # Labs
+            if vulhub.isSome():
+              let lab = vulhub.get()
+              h3:
+                text &"{cve.cveId} Vulnerable Docker Environment"
+              p:
+                small(class="has-text-grey-light"):
+                  text "Vulhub is an open-source collection of Docker-ized vulnerable environments. No pre-existing knowledge of Docker is required, just execute two simple commands and you have a vulnerable environment."
+              p:
+                a(class = "button is-primary is-outlined", target = "_blank", rel = "nofollow", href = lab.url):
+                  span(class = "icon"):
+                    italic(class = "fab fa-github")
+                  span():
+                    text "Get Vulhub Docker"
+              tdiv(style="overflow-wrap: break-word".toCss()):
+                verbatim markdown(lab.readme)
+
             if len(labs) > 0:
               h3():
                 text "Research Labs"
               renderCveLabButtons(labs)
-
-            if vulhub.isSome():
-              let lab = vulhub.get()
-              h3:
-                text &"{cve.cveId} Vulhub"
-              p:
-                small(class="has-text-grey-light"):
-                  text "Vulhub is an open-source collection of Docker-ized vulnerability environments. No pre-existing knowledge of Docker is required, just execute two simple commands and you have a vulnerable environment."
-              verbatim markdown(lab.readme)
 
 
             # Hacktivities
@@ -439,35 +446,14 @@ proc renderHacktivities*(ctx: Context, pgn: Pagination[CveHacktivity]): VNode =
             hr()
             ctx.renderPagination(pgn, "hacktivityIndex", @[])
 
-proc renderLabs*(ctx: Context, pgn: Pagination[Lab]): VNode =
+proc renderLabs*(ctx: Context, pgn: Pagination[Cve]): VNode =
   buildHtml():
     section(class="section"):
       tdiv(class="container is-widescreen"):
         tdiv(class="columns"):
           tdiv(class="column"):
             tdiv(class="columns is-multiline"):
-              for lab in pgn.items:
-                let linkToCve = ctx.urlFor("cve", {"year": $lab.cve.year, "sequence": $lab.cve.sequence})
-                tdiv(class="column is-half"):
-                  tdiv(class="card"):
-                    header(class="card-header"):
-                      p(class="card-header-title"):
-                        a(class = "has-text-primary-light is-size-5", href = linkToCve):
-                          text &"{lab.vendor}: {lab.cve.cveId}"
-                      tdiv(class="card-header-icon"):
-                        if lab.cve.cvss3.isSome():
-                          renderCvssTag(lab.cve.cvss3.get())
-                    tdiv(class="card-content has-background-black"):
-                      tdiv(class="content"):
-                        p:
-                          text truncate(lab.cve.description, 180)
-                          br()
-                          small(class="has-text-grey-light"):
-                            text &"{lab.cve.pubDate.ago}"
-                      tdiv(class="buttons"):
-                        a(class = "button is-small", href = linkToCve):
-                          text "view CVE"
-                        a(class = "button is-small", target = "_blank", href = lab.url):
-                          text "view lab"
+              for cve in pgn.items:
+                ctx.renderCveCard(cve)
             hr()
             ctx.renderPagination(pgn, "labIndex", @[])

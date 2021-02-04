@@ -236,15 +236,15 @@ proc showHacktivities*(ctx: Context) {.async.} =
 
 proc showLabs*(ctx: Context) {.async.} =
   let pageParam = ctx.getQueryParams("page")
-  var pgn: Pagination[Lab]
+  var pgn: Pagination[Cve]
   if pageParam != "":
     let pageNum = parseInt(pageParam)
     pgn = await db.getLabsPages(pageNum)
   else:
     pgn = await db.getLabsPages()
 
-  ctx.ctxData["title"] = "Learn To Reverse CVE Vulnerabilities - Research Labs"
-  ctx.ctxData["description"] = "Reverse and reproduce the latest CVEs with these vulnerable environments and exploit courses from Vulhub, Pentesterlab, Hack The Box, and more."
+  ctx.ctxData["title"] = "Learn To Reverse CVEs - Vulnerable Docker Environments"
+  ctx.ctxData["description"] = "Reverse and reproduce the latest CVEs with these open-source vulnerable environments."
 
-  let heroTitle = "Vulnerable Research Labs"
+  let heroTitle = "Vulnerable Docker Environments"
   resp ctx.renderMain(ctx.renderLabs(pgn), renderHero(heroTitle))

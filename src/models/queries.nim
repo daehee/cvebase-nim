@@ -127,10 +127,9 @@ const
   hacktivitiesCountQuery = sql(("select count(*) from (select distinct hacktivities.id from " & joinHacktivitiesCves & ") subquery_for_count"))
 
 
-  labsActivityCountQuery = sql("select count(*) from cves inner join cve_references cr on cves.id = cr.cve_id where cr.type = 'CveCourse'")
-  labsActivityQuery = sql((&"""select {selectCveFields}, cr.url from cves
-    inner join cve_references cr on cves.id = cr.cve_id
-    where cr.type = 'CveCourse'
+  labsActivityCountQuery = sql("select count(*) from cves inner join vulhubs on cves.id = vulhubs.cve_id")
+  labsActivityQuery = sql((&"""select {selectCveFields} from cves
+    inner join vulhubs on cves.id = vulhubs.cve_id
     order by published_date desc limit ? offset ?"""))
 
 
@@ -345,16 +344,15 @@ proc getHacktivitiesPages*(db: AsyncPool, page: int = 1): Future[Pagination[CveH
   let hacktivities = await db.getCveHacktivities(resultsPerPage, offset)
   result = newPagination[CveHacktivity](page, resultsPerPage, count, hacktivities)
 
-proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Lab]] {.async.} =
+proc getLabsPages*(db: AsyncPool, page: int = 1): Future[Pagination[Cve]] {.async.} =
   paginateQuery(labsActivityCountQuery, @[], page)
   let rows = await db.rows(labsActivityQuery, @[$resultsPerPage, $offset])
 
-  var labs: seq[Lab]
-  for i, row in rows.pairs:
-    let labUrl = row[9]
-    labs.add Lab(url: labUrl, vendor: labUrl.toLabVendor(), cve: parseCveRow(row))
+  var cves: seq[Cve]
+  for row in rows:
+    cves.add parseCveRow(row)
 
-  result = newPagination[Lab](page, resultsPerPage, count, labs)
+  result = newPagination[Cve](page, resultsPerPage, count, cves)
 
 proc getWelcomeResearchers*(db: AsyncPool): Future[seq[tuple[researcher: Researcher, cve: Cve]]] {.async.} =
   let researcherRows = await db.rows(sql("select id, alias, name from (select * from researchers order by cves_count desc limit 25) subquery_for_top order by random() limit 3"), @[])

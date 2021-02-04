@@ -60,3 +60,9 @@ insert into vulhubs
 select url, cve_id, created_at
 from cve_references
 where type = 'CveCourse' and url ~ 'vulhub'
+
+
+-- delete cve_references to vulhub
+
+delete from cve_references
+where type = 'CveCourse' and url ~ 'vulhub'
