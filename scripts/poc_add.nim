@@ -44,8 +44,6 @@ when isMainModule:
   let
     token = getEnv("GITHUB_TOKEN", "")
     dbUrl = getEnv("DATABASE_URL", "")
-    # TODO: set workDir in paramStr
-    workDir = getCurrentDir() / "tmp"
     metaFile = "PoC-in-GitHub.meta"
 
   if dbUrl == "":
@@ -54,6 +52,16 @@ when isMainModule:
 
   if token == "":
     echo "github access token not provided"
+    quit(1)
+
+  # Set working dir
+  # let workDir = getCurrentDir() / "tmp"
+  if paramCount() == 0:
+    echo "cmd parameter missing"
+    quit(1)
+  let workDir = paramStr(1)
+  if not dirExists(workDir):
+    echo "working dir does not exist: " & workDir
     quit(1)
 
   # Initialize db and github API clients
