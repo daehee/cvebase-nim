@@ -186,6 +186,18 @@ proc listCommits*(client: GithubApiClient, owner: string, repo: string): Respons
   var path = "/repos" / owner / repo / "commits"
   client.request(path)
 
+proc listCommitShas*(client: GithubApiClient, owner: string, repo: string): seq[string] =
+  ## List commit SHA hashes only
+  let resp = client.listCommits(owner, repo)
+  let data = parseJson(resp.bodyStream.readAll())
+  result = data.mapIt(it["sha"].getStr())
+
+proc getHeadCommit*(client: GithubApiClient, owner, repo: string): string =
+  ## Get HEAD commit SHA only
+  let resp = client.listCommits(owner, repo)
+  let data = parseJson(resp.bodyStream.readAll())
+  result = data[0]["sha"].getStr()
+
 proc compareCommits*(client: GithubApiClient; owner, repo, base, head: string): Response =
   var path = "/repos" / owner / repo / "compare" / &"{base}...{head}"
   client.request(path)
@@ -198,8 +210,3 @@ proc getFilesChanged*(client: GithubApiClient; owner, repo, base, head: string):
       let fileStatus = x["status"].getStr()
       fileStatus == "added" or fileStatus == "modified"
   ).mapIt(it["filename"].getStr())
-
-proc getHeadCommit*(client: GithubApiClient, owner, repo: string): string =
-  let resp = client.listCommits(owner, repo)
-  let data = parseJson(resp.bodyStream.readAll())
-  result = data[0]["sha"].getStr()

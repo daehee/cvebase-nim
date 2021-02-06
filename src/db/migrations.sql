@@ -66,3 +66,12 @@ where type = 'CveCourse' and url ~ 'vulhub'
 
 delete from cve_references
 where type = 'CveCourse' and url ~ 'vulhub'
+
+-- add columns to pocs
+
+alter table pocs
+    add updated_at timestamp(6);
+alter table pocs
+    add stars bigint default 0;
+alter table pocs
+    add description varchar;
