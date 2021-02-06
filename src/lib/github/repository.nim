@@ -3,7 +3,7 @@
 ## found in the GitHub API documentation.
 ## https://developer.github.com/v3/repos/
 
-import httpclient, os, strutils, json, marshal, strformat
+import httpclient, os, strutils, json, marshal, strformat, streams, sequtils
 import ./client
 
 type
@@ -189,3 +189,17 @@ proc listCommits*(client: GithubApiClient, owner: string, repo: string): Respons
 proc compareCommits*(client: GithubApiClient; owner, repo, base, head: string): Response =
   var path = "/repos" / owner / repo / "compare" / &"{base}...{head}"
   client.request(path)
+
+proc getFilesChanged*(client: GithubApiClient; owner, repo, base, head: string): seq[string] =
+  ## Compare files changed between last and head commits
+  let resp = client.compareCommits(owner, repo, base, head)
+  let data = parseJson(resp.bodyStream.readAll())
+  result = data["files"].getElems().filter(proc(x: JsonNode): bool =
+      let fileStatus = x["status"].getStr()
+      fileStatus == "added" or fileStatus == "modified"
+  ).mapIt(it["filename"].getStr())
+
+proc getHeadCommit*(client: GithubApiClient, owner, repo: string): string =
+  let resp = client.listCommits(owner, repo)
+  let data = parseJson(resp.bodyStream.readAll())
+  result = data[0]["sha"].getStr()
