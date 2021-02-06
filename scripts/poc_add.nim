@@ -94,10 +94,10 @@ when isMainModule:
   echo "files changed: " & $len(filesChanged)
 
   let url = "https://github.com/nomi-sec/PoC-in-GitHub"
-  url.loadGitRepo("master", workDir)
+  let repoPath = url.loadGitRepo("master", workDir)
 
   ## Open actual poc json files in repo and parse the JSON
-  let data = parsePocFiles("tmp/PoC-in-GitHub", filesChanged)
+  let data = parsePocFiles(repoPath, filesChanged)
 
   echo "pocs to process: " & $len(data)
 
