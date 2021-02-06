@@ -13,10 +13,11 @@ bin           = @["cvebasen"]
 requires "nim >= 1.4.2"
 requires "jester >= 0.5.0"
 requires "karax >= 1.2.1"
-requires "sass#e683aa1"
+requires "sass@#e683aa1"
 requires "prologue >= 0.4.4"
-requires "markdown#head"
-requires "ago#head"
+requires "markdown@#head"
+requires "ago@#head"
+requires "gittyup@#3352aa1"
 
 # Tasks
 
