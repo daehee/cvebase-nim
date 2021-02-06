@@ -17,9 +17,7 @@ const pocDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
 
 proc parsePocFiles(repoDir: string, filepaths: seq[string]): seq[Poc] =
   withDir(getCurrentDir() / repoDir):
-    echo "in " & getCurrentDir()
     for fp in filepaths:
-      echo "trying " & fp
       if not fp.endsWith(".json"): continue
       let data = readFile(getCurrentDir() / fp).parseJson()
       for item in data:
@@ -32,35 +30,39 @@ proc parsePocFiles(repoDir: string, filepaths: seq[string]): seq[Poc] =
         result.add poc
 
 when isMainModule:
-  let token = getEnv("GITHUB_TOKEN", "")
+  let
+    token = getEnv("GITHUB_TOKEN", "")
+    workDir = getCurrentDir() / "tmp"
+    metaFile = "PoC-in-GitHub.meta"
 
   echo "github access token: " & token
   var cl = newGithubApiClient(token)
 
-  # TODO: Set lastSha based on meta file
-  ## check if already processed commit hash (in a stored meta file)
-  let
-    lastSha = "e7c4705e00c1e77d79b7ca2fa84e7fdb95f50365"
-    headSha = cl.getHeadCommit("nomi-sec", "PoC-in-GitHub")
+  ## Check if already processed commit hash (in a stored meta file)
+  var lastSha: string
+  withDir workDir:
+    lastSha = readFile(metaFile)
 
+  let headSha = cl.getHeadCommit("nomi-sec", "PoC-in-GitHub")
   if headSha == lastSha:
-    echo "already up to date"
-    echo headSha
-    quit(1)
+    echo "already up to date @ commit " & headSha
+    quit(0)
 
   let filesChanged = cl.getFilesChanged("nomi-sec", "PoC-in-GitHub", lastSha, headSha)
 
   let url = "https://github.com/nomi-sec/PoC-in-GitHub"
-  url.loadGitRepo("master", (getCurrentDir() / "tmp"))
+  url.loadGitRepo("master", workDir)
 
-  block:
-    ## Open actual poc json files in repo and parse the JSON
-    let parsed = parsePocFiles("tmp/PoC-in-GitHub", filesChanged)
-    for poc in parsed:
-      echo poc.url
-      echo poc.description
-      echo poc.stars
-      echo poc.createdAt.format("yyyy-MM-dd")
+  ## Open actual poc json files in repo and parse the JSON
+  let pocs = parsePocFiles("tmp/PoC-in-GitHub", filesChanged)
+  for poc in pocs:
+    echo poc.url
+    echo poc.description
+    echo poc.stars
+    echo poc.createdAt.format("yyyy-MM-dd")
 
-#  block:
-    ## Compare fetched Pocs with what's in the db pocs table
+  ## Compare fetched Pocs with what's in the db pocs table
+
+  ## Save headSha to meta file
+  withDir workDir:
+    writeFile(metaFile, headSha)
