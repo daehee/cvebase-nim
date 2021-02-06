@@ -3,7 +3,7 @@
 ## found in the GitHub API documentation.
 ## https://developer.github.com/v3/repos/
 
-import httpclient, os, strutils, json, marshal
+import httpclient, os, strutils, json, marshal, strformat
 import ./client
 
 type
@@ -181,3 +181,11 @@ proc getContents*(client: GithubApiClient, owner: string, repo: string, contentP
   ## Example: https://api.github.com/repos/octocat/hello-world/contents/PATH
   var path = "/repos" / owner / repo / "/contents" / contentPath
   client.request(path, mediaType = "raw")
+
+proc listCommits*(client: GithubApiClient, owner: string, repo: string): Response =
+  var path = "/repos" / owner / repo / "commits"
+  client.request(path)
+
+proc compareCommits*(client: GithubApiClient; owner, repo, base, head: string): Response =
+  var path = "/repos" / owner / repo / "compare" / &"{base}...{head}"
+  client.request(path)
