@@ -17,6 +17,7 @@ requires "sass#e683aa1"
 requires "prologue >= 0.4.4"
 requires "markdown#head"
 requires "ago#head"
+requires "schedules#head"
 
 # Tasks
 
