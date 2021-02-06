@@ -99,12 +99,11 @@ const
 
   cvesPocActivityQuery = sql((&"""select {selectCveFields} from cves
   where cves.id in
-  (select cve_id from cve_references where type = 'CvePoc' order by created_at desc limit 200) limit 10"""))
+  (select cve_id from pocs order by created_at desc limit 200) limit 10"""))
 
-  pocActivityQuery = sql((&"""select url, DATE_TRUNC('second', cr.created_at), {selectCveFields} from cve_references cr
-  inner join cves on cves.id = cr.cve_id
-  where cr.type = 'CvePoc'
-  order by cr.created_at desc limit 25""").unindent.replace("\n", " "))
+  pocActivityQuery = sql((&"""select url, DATE_TRUNC('second', pocs.created_at), {selectCveFields} from pocs
+  inner join cves on cves.id = pocs.cve_id
+  order by pocs.created_at desc limit 25""").unindent.replace("\n", " "))
 
   productQuery = sql("select id, name, slug from products where slug = ?")
   productByIdQuery = sql("select slug from products where id = ?")

@@ -89,7 +89,7 @@ type
 ##
 
 const
-  cvePocsQuery = sql("select url from cve_references where cve_references.type = 'CvePoc' and cve_references.cve_id = ? order by created_at desc")
+  cvePocsQuery = sql("select url from pocs where pocs.cve_id = ? order by created_at desc")
   cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ? order by created_at desc")
 
   cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in (select researcher_id from cves_researchers where cve_id = ?)""")
