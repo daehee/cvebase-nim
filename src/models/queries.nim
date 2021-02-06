@@ -101,7 +101,7 @@ const
   where cves.id in
   (select cve_id from pocs order by created_at desc limit 200) limit 10"""))
 
-  pocActivityQuery = sql((&"""select url, DATE_TRUNC('second', pocs.created_at), {selectCveFields} from pocs
+  pocActivityQuery = sql((&"""select url, stars, description, DATE_TRUNC('second', pocs.created_at), {selectCveFields} from pocs
   inner join cves on cves.id = pocs.cve_id
   order by pocs.created_at desc limit 25""").unindent.replace("\n", " "))
 
@@ -276,8 +276,8 @@ proc getPocActivity*(db: AsyncPool): Future[seq[tuple[poc: Poc, cve: Cve]]] {.as
   ## Returns sequence of tuple containing
   let rows = await db.rows(pocActivityQuery, @[])
   for row in rows:
-    let cve = parseCveRow(row[2..10])
-    let poc = Poc(url: row[0], createdAt: parsePgDateTime(row[1]))
+    let cve = parseCveRow(row[4..12])
+    let poc = Poc(url: row[0], stars: parseInt(row[1]), description: row[2], createdAt: parsePgDateTime(row[3]))
     result.add (poc: poc, cve: cve)
 
 proc getCvesPocActivity*(db: AsyncPool): Future[seq[Cve]] {.async.} =

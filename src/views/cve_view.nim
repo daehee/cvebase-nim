@@ -184,7 +184,7 @@ proc renderCve*(
 
               ul(id="pocs"):
                 for poc in shown:
-                  renderPocList(poc.url)
+                  renderPocList(poc.url, poc.stars)
 
               if len(hidden) > 0:
                 details():
@@ -193,7 +193,7 @@ proc renderCve*(
                     text &"Show all exploits (+{$moreCount}):"
                   ul(id="pocs-more"):
                     for poc in hidden:
-                      renderPocList(poc.url)
+                      renderPocList(poc.url, poc.stars)
             p():
               if pocsCount > 0:
                 a(class = "button", target = "_blank", href = cve.repoPath(true)):
@@ -370,7 +370,13 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[tuple[poc: P
                       verbatim peekOutlink(poc.url)
                       br()
                       small(class="has-text-grey-light"):
+#                        if poc.stars > 0:
+#                          verbatim &"<i class=\"far fa-star\"></i> {$poc.stars}"
+#                          br()
                         text &"added {poc.createdAt.ago}"
+                    if poc.description != "":
+                      p:
+                        text poc.description
                   tdiv(class="buttons"):
                     a(class = "button is-small", href = linkToCve):
                       text "view CVE"

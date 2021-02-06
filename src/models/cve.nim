@@ -89,7 +89,7 @@ type
 ##
 
 const
-  cvePocsQuery = sql("select url from pocs where pocs.cve_id = ? order by created_at desc")
+  cvePocsQuery = sql("select url, stars from pocs where pocs.cve_id = ? order by stars desc")
   cveLabsQuery = sql("select url from cve_references where cve_references.type = 'CveCourse' and cve_references.cve_id = ? order by created_at desc")
 
   cveResearchersQuery = sql("""select alias, name from researchers where researchers.id in (select researcher_id from cves_researchers where cve_id = ?)""")
@@ -105,7 +105,7 @@ const
 proc getPocs*(cve: Cve): Future[seq[Poc]] {.async.} =
   let rows = await db.rows(cvePocsQuery, @[$cve.id])
   for row in rows:
-    result.add Poc(url: row[0])
+    result.add Poc(url: row[0], stars: parseInt(row[1]))
 
 proc getResearchers*(cve: Cve): Future[seq[Researcher]] {.async.} =
   let rows = await db.rows(cveResearchersQuery, @[$cve.id])
