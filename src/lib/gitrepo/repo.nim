@@ -19,4 +19,6 @@ proc loadGitRepo*(url, branch: string; workDir: string = getCurrentDir()): strin
   withDir(workDir / repoDir):
     let code = execCmd(&"git pull origin {branch}")
     if code > 0: raise newOSError(code.OSErrorCode, "error git pull")
+  echo "workDir: " & workDir
+  echo "repoDir: " & repoDir
   return workDir / repoDir
