@@ -22,14 +22,14 @@ type
     poc: Poc
 
 
-proc parsePocFiles(repoDir: string, filepaths: seq[string]): seq[GithubPoc] =
-  withDir(getCurrentDir() / repoDir):
+proc parsePocFiles(repoPath: string, filepaths: seq[string]): seq[GithubPoc] =
+  withDir(repoPath):
     for fp in filepaths:
       if not fp.endsWith(".json"): continue
       # cveID
       let cveId = fp.split('/')[^1].split('.')[0]
       # poc
-      let data = readFile(getCurrentDir() / fp).parseJson()
+      let data = readFile(repoPath / fp).parseJson()
       for item in data:
         let poc = Poc(
           url: item["html_url"].getStr(),
@@ -95,6 +95,8 @@ when isMainModule:
 
   let url = "https://github.com/nomi-sec/PoC-in-GitHub"
   let repoPath = url.loadGitRepo("master", workDir)
+
+  echo "repo path: " & repoPath
 
   ## Open actual poc json files in repo and parse the JSON
   let data = parsePocFiles(repoPath, filesChanged)
