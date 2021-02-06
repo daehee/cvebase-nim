@@ -30,6 +30,8 @@ type
 
   Poc* = object
     url*: string
+    description*: string
+    stars*: int
     createdAt*: DateTime
 
   Lab* = object
