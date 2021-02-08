@@ -44,3 +44,6 @@ task server, "Run server in dev mode":
 
 task testdb, "Test db":
   exec "nim c -r tests/tdb.nim"
+
+task buildpoc, "Build release for cvebasepoc":
+  exec "nim c -d:ssl -d:release --threads:on --outdir:./scripts scripts/poc_add.nim"

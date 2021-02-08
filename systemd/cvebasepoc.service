@@ -1,0 +1,20 @@
+[Unit]
+Description=cvebasepoc
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=op
+WorkingDirectory=/home/op/apps/cvebasen
+EnvironmentFile=/etc/default/cvebasen
+ExecStart=/usr/bin/stdbuf -oL /home/op/apps/cvebasen/scripts/poc_add /home/op/work
+# Restart when crashes.
+Restart=always
+RestartSec=1
+
+StandardOutput=syslog+console
+StandardError=syslog+console
+
+[Install]
+WantedBy=multi-user.target
