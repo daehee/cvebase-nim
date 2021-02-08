@@ -1,0 +1,20 @@
+[Unit]
+Description=cvebasen
+After=network.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=op
+WorkingDirectory=/home/op/apps/cvebasen
+EnvironmentFile=/etc/default/cvebasen
+ExecStart=/usr/bin/stdbuf -oL /home/op/apps/cvebasen/cvebasen
+# Restart when crashes.
+Restart=always
+RestartSec=1
+
+StandardOutput=syslog+console
+StandardError=syslog+console
+
+[Install]
+WantedBy=multi-user.target
