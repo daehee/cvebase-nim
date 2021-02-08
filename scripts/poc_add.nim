@@ -113,6 +113,9 @@ when isMainModule:
 
       echo "pocs to process: " & $len(data)
 
+      # collect cveRowIds for bulk update of pocsCount
+      var cvesUpdated = newSeq[string]()
+
       for item in data:
         let
           poc = item.poc
@@ -128,6 +131,12 @@ when isMainModule:
         db.exec(sql("""INSERT INTO pocs (url, cve_id, description, stars, created_at)
     VALUES (?, ?, ?, ?, now())
     ON CONFLICT (cve_id, url) DO UPDATE SET description = ?, stars = ?, updated_at = now()"""), @[poc.url, cveRowId, poc.description, $poc.stars, poc.description, $poc.stars])
+
+        cvesUpdated.add cveRowId
+
+      # update pocsCounts
+      for id in cvesUpdated:
+        db.exec(sql("update cves set cve_pocs_count = (select count(*) from pocs where cve_id = ?) where id = ?"), @[id, id])
 
       # done
       db.close()
