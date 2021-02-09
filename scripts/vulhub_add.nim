@@ -1,9 +1,10 @@
-
 import json, streams, uri, strutils, os, re
 import os, strformat, strutils, uri, db_postgres
 
 import lib/github/[client, repository]
 import db/dbutils
+
+# TODO: Add cmd switch to update existing README content
 
 proc toReadmePath(url: string): string =
   ## Converts repo url to README path
