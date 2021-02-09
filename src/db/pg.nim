@@ -44,7 +44,8 @@ proc rows*(
   ## Runs the SQL getting results.
   assert db.status == CONNECTION_OK
 
-  # logging.debug query.string & &" {args}"
+  when not defined(release):
+    logging.debug query.string & &" {args}"
 
   let success = pqsendQuery(db, dbFormat(query, args))
   if success != 1: dbError(db) # never seen to fail when async
