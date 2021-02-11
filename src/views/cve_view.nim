@@ -194,19 +194,19 @@ proc renderCve*(
                   ul(id="pocs-more"):
                     for poc in hidden:
                       renderPocList(poc.url, poc.stars)
-            p():
-              if pocsCount > 0:
-                a(class = "button", target = "_blank", href = cve.repoPath(true)):
-                  span(class = "icon"):
-                    italic(class = "fab fa-github")
-                  span():
-                    text "Add Exploit"
-              else:
-                a(class = "button", target = "_blank", rel = "nofollow", href = "https://github.com/cvebase/cvebase.com/issues"):
-                  span(class = "icon"):
-                    italic(class = "fab fa-github")
-                  span():
-                    text "Add Exploit"
+
+            else:
+              p:
+                text &"Exploits for {cve.cveId} are not publicly available."
+              p:
+                text "Access our inventory of exclusive N-Day CVE Exploits, provided for legal security research and testing purposes. Inquire about our offerings by email: "
+                a(href = &"mailto:hello@cvebase.com?subject=N-Day%20Inquiry%3A%20{cve.cveId}"):
+                  text "hello@cvebase.com"
+                text " ("
+                a(href="https://keybase.io/cvebase/pgp_keys.asc?fingerprint=6fc3a7ce2e5579123854bb389eb920a4d0a0ed53", target="_blank", rel="nofollow"):
+                  text "PGP key"
+                text ")."
+
 
             # Labs
             if vulhub.isSome():
