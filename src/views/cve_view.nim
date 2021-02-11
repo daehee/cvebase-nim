@@ -252,18 +252,20 @@ proc renderCve*(
                         text "read report"
 
 
-            h3():
-              text "Official CVE References"
-            details():
-              summary():
-                text "View list"
-              ul(id="references"):
-                for url in cve.refUrls:
-                  li:
-                    a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
-                      verbatim peekOutlink(url)
-                      span(class="icon has-text-grey-light is-size-6"):
-                        italic(class="fas fa-external-link-square-alt")
+            let numRefUrls = len(cve.refUrls)
+            if numRefUrls > 0:
+              h3():
+                text "Official CVE References"
+              details():
+                summary():
+                  text &"View references ({numRefUrls})"
+                ul(id="references"):
+                  for url in cve.refUrls:
+                    li:
+                      a(target="_blank",class="is-size-6 has-text-grey-light",rel="nofollow",href=url):
+                        verbatim peekOutlink(url)
+                        span(class="icon has-text-grey-light is-size-6"):
+                          italic(class="fas fa-external-link-square-alt")
         ctx.renderSidebar(cve)
 
 
