@@ -68,7 +68,7 @@ proc renderNavBar*(): VNode =
               form(accept-charset="UTF-8", action="/search", `method`="get"):
                 tdiv(class="field has-addons"):
                   p(class="control is-expanded"):
-                    input(class="input", placeholder="Search by CVE ID", value="", name="query", id="query")
+                    input(class="input", placeholder="Search Vulnerabilities", value="", name="query", id="query")
                   p(class="control"):
                     button(class="button is-primary", `type`="submit"):
                       verbatim "<span class=\"icon\"><i class=\"fas fa-search\"></i></span>"
