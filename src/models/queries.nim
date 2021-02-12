@@ -376,8 +376,14 @@ proc getWelcomeCves*(db: AsyncPool): Future[seq[Cve]] {.async.} =
 proc getWelcomeHacktivities*(db: AsyncPool): Future[seq[CveHacktivity]] {.async.} =
   result = await db.getCveHacktivities(5)
 
-proc searchByCveId*(db: AsyncPool, query: string): Future[seq[Cve]] {.async.} =
-  let searchQuery = &"""SELECT {selectCveFields} FROM cves
+proc searchByCveId*(db: AsyncPool, query: string, page: int = 1): Future[Pagination[Cve]] {.async.} =
+  let searchCountQuery = sql("""SELECT COUNT(*) from cves INNER JOIN (
+SELECT cves.id AS pg_search_id
+FROM cves
+WHERE (searchable @@
+(plainto_tsquery('english', translate(?::text, '-', ' '))))) AS pg_search_f4bc98b8c7189982c7c49a
+ON cves.id = pg_search_f4bc98b8c7189982c7c49a.pg_search_id""")
+  let searchQuery = sql(&"""SELECT {selectCveFields} FROM cves
 INNER JOIN (
 SELECT cves.id AS pg_search_id,
 (ts_rank(searchable, (plainto_tsquery('english', translate(?::text, '-', ' '))), 0)) AS rank
@@ -385,8 +391,9 @@ FROM cves
 WHERE (searchable @@
 (plainto_tsquery('english', translate(?::text, '-', ' '))))) AS pg_search_f4bc98b8c7189982c7c49a
 ON cves.id = pg_search_f4bc98b8c7189982c7c49a.pg_search_id
-ORDER BY pg_search_f4bc98b8c7189982c7c49a.rank DESC, cves.id ASC LIMIT 10 OFFSET 0"""
-
-  let rows = await db.rows(searchQuery.sql, @[query, query])
-  for row in rows:
-    result.add parseCveRow(row)
+ORDER BY pg_search_f4bc98b8c7189982c7c49a.rank DESC, cves.id ASC LIMIT 10 OFFSET ?""")
+  paginateQuery(searchCountQuery, @[query], page)
+  let rows = await db.rows(searchQuery, @[query, query, $offset])
+  result = newPagination[Cve](page, resultsPerPage, count, newSeq[Cve]())
+  for item in rows:
+    result.items.add parseCveRow(item)
