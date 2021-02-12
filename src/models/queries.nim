@@ -378,14 +378,14 @@ proc getWelcomeHacktivities*(db: AsyncPool): Future[seq[CveHacktivity]] {.async.
 
 proc searchByCveId*(db: AsyncPool, query: string): Future[seq[Cve]] {.async.} =
   let searchQuery = &"""SELECT {selectCveFields} FROM cves
-    INNER JOIN (
-    SELECT cves.id AS pg_search_id,
-    (ts_rank((to_tsvector('simple', translate(cves.cve_id::text, '-', ' '))), (plainto_tsquery('simple', translate(?::text, '-', ' '))), 0)) AS rank
-    FROM cves
-    WHERE ((to_tsvector('simple', translate(cves.cve_id::text, '-', ' '))) @@
-    (plainto_tsquery('simple', translate(?::text, '-', ' '))))) AS pg_search_f4bc98b8c7189982c7c49a
-    ON cves.id = pg_search_f4bc98b8c7189982c7c49a.pg_search_id
-    ORDER BY pg_search_f4bc98b8c7189982c7c49a.rank DESC, cves.id ASC LIMIT 10 OFFSET 0"""
+INNER JOIN (
+SELECT cves.id AS pg_search_id,
+(ts_rank(searchable, (plainto_tsquery('english', translate(?::text, '-', ' '))), 0)) AS rank
+FROM cves
+WHERE (searchable @@
+(plainto_tsquery('english', translate(?::text, '-', ' '))))) AS pg_search_f4bc98b8c7189982c7c49a
+ON cves.id = pg_search_f4bc98b8c7189982c7c49a.pg_search_id
+ORDER BY pg_search_f4bc98b8c7189982c7c49a.rank DESC, cves.id ASC LIMIT 10 OFFSET 0"""
 
   let rows = await db.rows(searchQuery.sql, @[query, query])
   for row in rows:

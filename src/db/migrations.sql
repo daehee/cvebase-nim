@@ -75,3 +75,13 @@ alter table pocs
     add stars bigint default 0;
 alter table pocs
     add description varchar;
+
+-- add searchable to cves
+
+ALTER TABLE cves
+    ADD COLUMN searchable tsvector GENERATED ALWAYS AS (
+            setweight(to_tsvector('simple', translate(cves.cve_id::text, '-', ' ')), 'A') ||
+            setweight(to_tsvector('english', coalesce(jsonb_array_element(data->'cve'->'description'->'description_data', 0)->>'value', '')), 'B')
+        ) STORED;
+CREATE INDEX CONCURRENTLY index_cves_on_searchable
+    ON cves USING gin (searchable)
