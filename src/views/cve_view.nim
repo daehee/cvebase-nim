@@ -199,8 +199,8 @@ proc renderCve*(
               p:
                 text &"Exploits for {cve.cveId} are not publicly available."
               p:
-                text "Access our inventory of exclusive N-Day CVE Exploits, provided for legal security research and testing purposes. Inquire about our offerings by email: "
-                a(href = &"mailto:hello@cvebase.com?subject=N-Day%20Inquiry%3A%20{cve.cveId}"):
+                text "We acquire N-Day exploits for CVE vulnerabilities, to be used for legal security research and testing purposes. Financial compensation provided for critical vulnerabilities with functional and reliable proof-of-concept code. Inquire about our exploit acquisition program by email: "
+                a(href = &"mailto:hello@cvebase.com?subject=N-Day%20Acquisition%3A%20{cve.cveId}"):
                   text "hello@cvebase.com"
                 text " ("
                 a(href="https://keybase.io/cvebase/pgp_keys.asc?fingerprint=6fc3a7ce2e5579123854bb389eb920a4d0a0ed53", target="_blank", rel="nofollow"):
