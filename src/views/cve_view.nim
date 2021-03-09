@@ -378,7 +378,7 @@ proc renderPocIndex*(ctx: Context, leaders: seq[Cve], activity: seq[tuple[poc: P
                         text &"added {poc.createdAt.ago}"
                     if poc.description != "":
                       p:
-                        text poc.description
+                        text truncate(poc.description, 140)
                   tdiv(class="buttons"):
                     a(class = "button is-small", href = linkToCve):
                       text "view CVE"
