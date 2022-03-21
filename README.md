@@ -1,15 +1,12 @@
-# cvebasen
+![cvebase](https://github.com/cvebase/cvebase.com/raw/main/assets/cvebase-logo.png)
 
-## Model
-Defines object type and interacts with database
+# cvebase-nim
 
-## View
-Builds html with Karax DSL
+Web application for **cvebase.com** written in Nim.
 
-## Controller
-Sanitize and validate parameters sent by router (here)
-Fetch object from database (in model)
-Render views and send to router (in view)
+Serves as the frontend for the [cvebase/cvebase.com](https://github.com/cvebase/cvebase.com) vulnerability data project.
 
-## Notes:
-* Jester tries to move external router into main router: https://github.com/dom96/jester/issues/178
+Built with:
+- [prologue](https://github.com/planety/prologue) web framework
+- [jester](https://github.com/dom96/jester) for request routing
+- [karax](https://github.com/karaxnim/karax) DSL for templating
